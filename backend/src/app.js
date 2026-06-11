@@ -27,9 +27,10 @@ const app = express();
 
 // Security
 app.use(helmet());
+const allowedOrigins = process.env.ALLOWED_ORIGINS || '*';
 app.use(cors({
-  origin: (process.env.ALLOWED_ORIGINS || '').split(','),
-  credentials: true,
+  origin: allowedOrigins === '*' ? '*' : allowedOrigins.split(','),
+  credentials: allowedOrigins !== '*',
 }));
 
 // Rate limiting

@@ -23,6 +23,9 @@ async function waitForDb(retries = 10, delayMs = 3000) {
 }
 
 async function start() {
+  const dbUrl = process.env.DATABASE_URL || '(not set)';
+  logger.info(`DB URL: ${dbUrl.replace(/:([^@]+)@/, ':***@')}`);
+
   // Start HTTP server first so Railway healthcheck passes
   await new Promise(resolve => app.listen(PORT, () => {
     logger.info(`Rice Mill API running on port ${PORT} [${process.env.NODE_ENV}]`);
@@ -30,9 +33,13 @@ async function start() {
   }));
 
   // Then connect to DB with retries
-  await waitForDb(10, 3000);
-  await runMigrations();
-  startScheduler();
+  try {
+    await waitForDb(15, 5000);
+    await runMigrations();
+    startScheduler();
+  } catch (err) {
+    logger.error('DB connection failed after retries — server running without DB', err);
+  }
 }
 
 start().catch((err) => {
