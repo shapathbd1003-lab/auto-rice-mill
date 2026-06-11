@@ -9,12 +9,29 @@ const { startScheduler } = require('./src/config/scheduler');
 
 const PORT = process.env.PORT || 3001;
 
+async function waitForDb(retries = 10, delayMs = 3000) {
+  for (let i = 1; i <= retries; i++) {
+    try {
+      await testConnection();
+      return;
+    } catch (err) {
+      logger.warn(`DB not ready (attempt ${i}/${retries}): ${err.message}`);
+      if (i === retries) throw err;
+      await new Promise(r => setTimeout(r, delayMs));
+    }
+  }
+}
+
 async function start() {
-  await testConnection();
-  await runMigrations();
-  app.listen(PORT, () => {
+  // Start HTTP server first so Railway healthcheck passes
+  await new Promise(resolve => app.listen(PORT, () => {
     logger.info(`Rice Mill API running on port ${PORT} [${process.env.NODE_ENV}]`);
-  });
+    resolve();
+  }));
+
+  // Then connect to DB with retries
+  await waitForDb(10, 3000);
+  await runMigrations();
   startScheduler();
 }
 
