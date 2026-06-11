@@ -3,6 +3,7 @@ services:
   - type: web
     name: rice-mill-api
     runtime: node
+    plan: free
     rootDir: backend
     buildCommand: npm install
     startCommand: npm start
@@ -30,6 +31,7 @@ services:
   - type: web
     name: rice-mill-web
     runtime: static
+    plan: free
     rootDir: web
     buildCommand: npm install && npm run build
     staticPublishPath: dist
@@ -44,6 +46,7 @@ services:
 
 databases:
   - name: rice-mill-db
+    plan: free
     databaseName: rice_mill
     user: ricemill
     postgresMajorVersion: 16
