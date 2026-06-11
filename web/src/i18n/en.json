@@ -1,0 +1,80 @@
+{
+  "app": { "name": "Auto Rice Mill", "tagline": "Rice Mill Management System" },
+  "nav": {
+    "dashboard": "Dashboard", "customers": "Customers", "suppliers": "Suppliers",
+    "purchases": "Purchases", "production": "Production", "inventory": "Inventory",
+    "sales": "Sales", "accounting": "Accounting", "employees": "Employees",
+    "vehicles": "Vehicles", "reports": "Reports", "settings": "Settings"
+  },
+  "common": {
+    "save": "Save", "cancel": "Cancel", "delete": "Delete", "edit": "Edit",
+    "add": "Add", "search": "Search", "filter": "Filter", "export": "Export",
+    "print": "Print", "loading": "Loading...", "noData": "No data found",
+    "confirm": "Confirm", "yes": "Yes", "no": "No",
+    "from": "From", "to": "To", "date": "Date", "status": "Status",
+    "total": "Total", "amount": "Amount", "balance": "Balance",
+    "actions": "Actions", "name": "Name", "phone": "Phone", "address": "Address",
+    "code": "Code", "notes": "Notes", "submit": "Submit"
+  },
+  "auth": {
+    "login": "Login", "logout": "Logout", "email": "Email", "password": "Password",
+    "millId": "Mill ID", "loginBtn": "Sign In", "changePassword": "Change Password"
+  },
+  "dashboard": {
+    "todaySales": "Today's Sales", "todayProduction": "Today's Production",
+    "lowStock": "Low Stock Items", "totalDue": "Total Customer Due",
+    "stockSummary": "Stock Summary", "recentActivities": "Recent Activities"
+  },
+  "customer": {
+    "title": "Customers", "addNew": "Add Customer", "ledger": "Customer Ledger",
+    "due": "Due Amount", "creditLimit": "Credit Limit", "recordPayment": "Record Payment"
+  },
+  "supplier": {
+    "title": "Suppliers", "addNew": "Add Supplier", "ledger": "Supplier Ledger"
+  },
+  "purchase": {
+    "title": "Purchases", "addNew": "New Purchase", "invoice": "Invoice",
+    "grossWeight": "Gross Weight (kg)", "tareWeight": "Tare Weight (kg)",
+    "netWeight": "Net Weight (kg)", "moisture": "Moisture %",
+    "unitPrice": "Unit Price (৳/kg)", "transport": "Transport Cost"
+  },
+  "production": {
+    "title": "Production", "newBatch": "New Batch", "batchNo": "Batch No",
+    "paddyQty": "Paddy Quantity (kg)", "outputs": "Production Outputs",
+    "rice": "Rice", "bran": "Bran", "husk": "Husk", "brokenRice": "Broken Rice",
+    "yieldPct": "Yield %", "completeBatch": "Complete Batch"
+  },
+  "inventory": {
+    "title": "Inventory", "stock": "Stock", "lowStock": "Low Stock Alert",
+    "adjust": "Adjust Stock", "category": "Category",
+    "currentStock": "Current Stock", "reorderLevel": "Reorder Level"
+  },
+  "sales": {
+    "title": "Sales", "newSale": "New Sale", "invoice": "Invoice",
+    "retail": "Retail", "wholesale": "Wholesale", "discount": "Discount",
+    "paid": "Paid", "due": "Due", "recordPayment": "Record Payment"
+  },
+  "accounting": {
+    "title": "Accounting", "expenses": "Expenses", "accounts": "Accounts",
+    "cashBook": "Cash Book", "profitLoss": "Profit & Loss", "addExpense": "Add Expense",
+    "dailyClose": "Daily Closing", "closureDay": "Close Day"
+  },
+  "employee": {
+    "title": "Employees", "attendance": "Attendance", "salary": "Salary",
+    "advance": "Salary Advance", "designation": "Designation",
+    "joinDate": "Join Date", "basicSalary": "Basic Salary",
+    "generateSalary": "Generate Salary", "markPaid": "Mark as Paid"
+  },
+  "vehicle": {
+    "title": "Vehicles", "trips": "Trips", "number": "Vehicle Number",
+    "driver": "Driver Name", "fuel": "Fuel Cost", "trip": "Trip"
+  },
+  "report": {
+    "title": "Reports", "daily": "Daily Report", "monthly": "Monthly Report",
+    "yearly": "Yearly Report", "customerDue": "Customer Due Report",
+    "supplierDue": "Supplier Due Report", "salary": "Salary Report",
+    "profitAnalysis": "Profit Analysis"
+  },
+  "currency": "৳",
+  "unit": { "kg": "kg", "bag": "bag", "piece": "piece" }
+}

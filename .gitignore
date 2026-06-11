@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build outputs
+web/dist/
+desktop/dist/
+
+# Environment files — never commit real secrets
+.env
+**/.env
+!**/.env.example
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Database files
+*.sqlite
+*.db
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Electron build artifacts
+desktop/dist/
+desktop/build/

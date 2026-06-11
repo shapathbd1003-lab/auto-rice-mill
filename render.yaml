@@ -1,0 +1,49 @@
+services:
+  # ── Backend API ─────────────────────────────────────────────────────────────
+  - type: web
+    name: rice-mill-api
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: DATABASE_URL
+        fromDatabase:
+          name: rice-mill-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 15m
+      - key: JWT_REFRESH_EXPIRES_IN
+        value: 7d
+      - key: ALLOWED_ORIGINS
+        value: https://rice-mill-web.onrender.com
+    autoDeploy: true
+
+  # ── Web Frontend ─────────────────────────────────────────────────────────────
+  - type: web
+    name: rice-mill-web
+    runtime: static
+    rootDir: web
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://rice-mill-api.onrender.com
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    autoDeploy: true
+
+databases:
+  - name: rice-mill-db
+    databaseName: rice_mill
+    user: ricemill
+    postgresMajorVersion: 16

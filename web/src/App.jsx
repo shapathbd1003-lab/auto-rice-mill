@@ -1,0 +1,42 @@
+import React from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import AppLayout from './layouts/AppLayout';
+import Login from './pages/Login/Login';
+import Dashboard from './pages/Dashboard/Dashboard';
+import Customers from './pages/Customers/Customers';
+import Suppliers from './pages/Suppliers/Suppliers';
+import Purchases from './pages/Purchases/Purchases';
+import Production from './pages/Production/Production';
+import Inventory from './pages/Inventory/Inventory';
+import Sales from './pages/Sales/Sales';
+import Accounting from './pages/Accounting/Accounting';
+import Employees from './pages/Employees/Employees';
+import Vehicles from './pages/Vehicles/Vehicles';
+import Reports from './pages/Reports/Reports';
+
+function RequireAuth({ children }) {
+  const { isAuthenticated } = useSelector((s) => s.auth);
+  return isAuthenticated ? children : <Navigate to="/login" replace />;
+}
+
+export default function App() {
+  return (
+    <Routes>
+      <Route path="/login" element={<Login />} />
+      <Route path="/" element={<RequireAuth><AppLayout /></RequireAuth>}>
+        <Route index         element={<Dashboard />} />
+        <Route path="customers/*"  element={<Customers />} />
+        <Route path="suppliers/*"  element={<Suppliers />} />
+        <Route path="purchases/*"  element={<Purchases />} />
+        <Route path="production/*" element={<Production />} />
+        <Route path="inventory/*"  element={<Inventory />} />
+        <Route path="sales/*"      element={<Sales />} />
+        <Route path="accounting/*" element={<Accounting />} />
+        <Route path="employees/*"  element={<Employees />} />
+        <Route path="vehicles/*"   element={<Vehicles />} />
+        <Route path="reports/*"    element={<Reports />} />
+      </Route>
+    </Routes>
+  );
+}

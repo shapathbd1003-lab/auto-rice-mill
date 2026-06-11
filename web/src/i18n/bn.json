@@ -1,0 +1,80 @@
+{
+  "app": { "name": "অটো রাইস মিল", "tagline": "রাইস মিল ম্যানেজমেন্ট সিস্টেম" },
+  "nav": {
+    "dashboard": "ড্যাশবোর্ড", "customers": "গ্রাহক", "suppliers": "সরবরাহকারী",
+    "purchases": "ক্রয়", "production": "উৎপাদন", "inventory": "ইনভেন্টরি",
+    "sales": "বিক্রয়", "accounting": "হিসাব", "employees": "কর্মচারী",
+    "vehicles": "যানবাহন", "reports": "রিপোর্ট", "settings": "সেটিংস"
+  },
+  "common": {
+    "save": "সংরক্ষণ করুন", "cancel": "বাতিল", "delete": "মুছুন", "edit": "সম্পাদনা",
+    "add": "যোগ করুন", "search": "খুঁজুন", "filter": "ফিল্টার", "export": "রপ্তানি",
+    "print": "প্রিন্ট", "loading": "লোড হচ্ছে...", "noData": "কোনো ডেটা পাওয়া যায়নি",
+    "confirm": "নিশ্চিত করুন", "yes": "হ্যাঁ", "no": "না",
+    "from": "থেকে", "to": "পর্যন্ত", "date": "তারিখ", "status": "অবস্থা",
+    "total": "মোট", "amount": "পরিমাণ", "balance": "ব্যালেন্স",
+    "actions": "কার্যক্রম", "name": "নাম", "phone": "ফোন", "address": "ঠিকানা",
+    "code": "কোড", "notes": "নোট", "submit": "জমা দিন"
+  },
+  "auth": {
+    "login": "লগইন", "logout": "লগআউট", "email": "ইমেইল", "password": "পাসওয়ার্ড",
+    "millId": "মিল আইডি", "loginBtn": "প্রবেশ করুন", "changePassword": "পাসওয়ার্ড পরিবর্তন"
+  },
+  "dashboard": {
+    "todaySales": "আজকের বিক্রয়", "todayProduction": "আজকের উৎপাদন",
+    "lowStock": "কম স্টক আইটেম", "totalDue": "মোট বাকি পাওনা",
+    "stockSummary": "স্টক সারসংক্ষেপ", "recentActivities": "সাম্প্রতিক কার্যক্রম"
+  },
+  "customer": {
+    "title": "গ্রাহক", "addNew": "নতুন গ্রাহক যোগ করুন", "ledger": "গ্রাহক লেজার",
+    "due": "বাকি পরিমাণ", "creditLimit": "ক্রেডিট সীমা", "recordPayment": "পেমেন্ট রেকর্ড করুন"
+  },
+  "supplier": {
+    "title": "সরবরাহকারী", "addNew": "নতুন সরবরাহকারী যোগ করুন", "ledger": "সরবরাহকারী লেজার"
+  },
+  "purchase": {
+    "title": "ক্রয়", "addNew": "নতুন ক্রয়", "invoice": "চালান",
+    "grossWeight": "মোট ওজন (কেজি)", "tareWeight": "খালি ওজন (কেজি)",
+    "netWeight": "নিট ওজন (কেজি)", "moisture": "আর্দ্রতা %",
+    "unitPrice": "একক মূল্য (৳/কেজি)", "transport": "পরিবহন খরচ"
+  },
+  "production": {
+    "title": "উৎপাদন", "newBatch": "নতুন ব্যাচ", "batchNo": "ব্যাচ নম্বর",
+    "paddyQty": "ধানের পরিমাণ (কেজি)", "outputs": "উৎপাদন আউটপুট",
+    "rice": "চাল", "bran": "তুষের ভুষি", "husk": "তুষ", "brokenRice": "ভাঙা চাল",
+    "yieldPct": "ফলন %", "completeBatch": "ব্যাচ সম্পন্ন করুন"
+  },
+  "inventory": {
+    "title": "ইনভেন্টরি", "stock": "স্টক", "lowStock": "কম স্টক সতর্কতা",
+    "adjust": "স্টক সামঞ্জস্য করুন", "category": "বিভাগ",
+    "currentStock": "বর্তমান স্টক", "reorderLevel": "পুনরায় অর্ডার স্তর"
+  },
+  "sales": {
+    "title": "বিক্রয়", "newSale": "নতুন বিক্রয়", "invoice": "চালান",
+    "retail": "খুচরা", "wholesale": "পাইকারি", "discount": "ছাড়",
+    "paid": "পরিশোধিত", "due": "বাকি", "recordPayment": "পেমেন্ট রেকর্ড করুন"
+  },
+  "accounting": {
+    "title": "হিসাব", "expenses": "খরচ", "accounts": "অ্যাকাউন্ট",
+    "cashBook": "নগদ বই", "profitLoss": "লাভ ও লোকসান", "addExpense": "খরচ যোগ করুন",
+    "dailyClose": "দৈনিক সমাপনী", "closureDay": "দিন বন্ধ করুন"
+  },
+  "employee": {
+    "title": "কর্মচারী", "attendance": "উপস্থিতি", "salary": "বেতন",
+    "advance": "বেতন অগ্রিম", "designation": "পদবি",
+    "joinDate": "যোগদানের তারিখ", "basicSalary": "মূল বেতন",
+    "generateSalary": "বেতন তৈরি করুন", "markPaid": "পরিশোধিত হিসেবে চিহ্নিত করুন"
+  },
+  "vehicle": {
+    "title": "যানবাহন", "trips": "ট্রিপ", "number": "গাড়ির নম্বর",
+    "driver": "চালকের নাম", "fuel": "জ্বালানি খরচ", "trip": "ট্রিপ"
+  },
+  "report": {
+    "title": "রিপোর্ট", "daily": "দৈনিক রিপোর্ট", "monthly": "মাসিক রিপোর্ট",
+    "yearly": "বার্ষিক রিপোর্ট", "customerDue": "গ্রাহক বাকি রিপোর্ট",
+    "supplierDue": "সরবরাহকারী বাকি রিপোর্ট", "salary": "বেতন রিপোর্ট",
+    "profitAnalysis": "লাভ বিশ্লেষণ"
+  },
+  "currency": "৳",
+  "unit": { "kg": "কেজি", "bag": "বস্তা", "piece": "পিস" }
+}
