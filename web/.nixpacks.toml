@@ -1,2 +1,11 @@
+[phases.setup]
+nixPkgs = ["nodejs_20"]
+
+[phases.install]
+cmds = ["npm ci"]
+
 [phases.build]
-cmds = ["npm ci", "VITE_API_URL=https://backend-production-1b9e.up.railway.app npm run build"]
+cmds = ["VITE_API_URL=https://backend-production-1b9e.up.railway.app npm run build"]
+
+[start]
+cmd = "node server.js"
