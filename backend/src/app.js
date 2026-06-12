@@ -25,6 +25,9 @@ const syncRoutes         = require('./modules/sync/sync.routes');
 
 const app = express();
 
+// Trust Railway/Render proxy
+app.set('trust proxy', 1);
+
 // Security
 app.use(helmet());
 const allowedOrigins = process.env.ALLOWED_ORIGINS || '*';
