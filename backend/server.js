@@ -34,7 +34,7 @@ async function start() {
 
   // Then connect to DB with retries
   try {
-    await waitForDb(15, 5000);
+    await waitForDb(20, 3000);
     await runMigrations();
     startScheduler();
   } catch (err) {
