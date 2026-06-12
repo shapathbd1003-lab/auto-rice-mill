@@ -13,13 +13,16 @@ let syncManager;
 
 const isDev = process.env.NODE_ENV === 'development';
 
+const iconPath = path.join(__dirname, '../assets/icon.ico');
+const iconExists = require('fs').existsSync(iconPath);
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1280,
     height: 800,
     minWidth: 1024,
     minHeight: 600,
-    icon: path.join(__dirname, '../assets/icon.ico'),
+    ...(iconExists ? { icon: iconPath } : {}),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,

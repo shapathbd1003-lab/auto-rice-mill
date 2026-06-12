@@ -12,7 +12,7 @@ export async function desktopLogin({ email, password, millId }) {
   // The sync manager stores a password_hash from the server. We compare using SubtleCrypto.
   const user = await desktopDb.get(
     `SELECT u.*, m.name AS mill_name FROM users u
-     JOIN rice_mills m ON m.id = u.mill_id
+     JOIN mills m ON m.id = u.mill_id
      WHERE u.email = ? AND u.mill_id = ? AND u.is_active = 1`,
     [email, Number(millId)]
   );

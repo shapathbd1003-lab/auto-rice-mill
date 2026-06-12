@@ -1,5 +1,5 @@
--- ============================================================
--- Auto Rice Mill — SQLite Schema (Desktop / Offline DB)
+﻿-- ============================================================
+-- Auto Rice Mill â€” SQLite Schema (Desktop / Offline DB)
 -- Mirrors PostgreSQL schema; uses INTEGER for IDs (SQLite)
 -- ============================================================
 
@@ -393,3 +393,14 @@ CREATE INDEX IF NOT EXISTS idx_sq_entity     ON sync_queue(entity_type, entity_i
 CREATE INDEX IF NOT EXISTS idx_att_emp_date  ON attendance(employee_id, date);
 CREATE INDEX IF NOT EXISTS idx_so_mill_date  ON sales_orders(mill_id, date);
 CREATE INDEX IF NOT EXISTS idx_pur_mill_date ON purchases(mill_id, date);
+
+-- Default seed data (only insert if not already present)
+INSERT OR IGNORE INTO mills (id, name, name_bn, address, phone, email, is_active)
+VALUES (1, 'Auto Rice Mill', '??? ???? ???', 'Bangladesh', '', 'admin@ricemill.com', 1);
+
+-- Password hash for Admin@1234 (SHA-256)
+INSERT OR IGNORE INTO users (id, mill_id, name, email, password_hash, role, is_active)
+VALUES (1, 1, 'Administrator', 'admin@ricemill.com',
+  'bc78e58d55cde1346e68f8e5fe588dedf62fa457aa646a500a53347faff6ee24',
+  'admin', 1);
+
