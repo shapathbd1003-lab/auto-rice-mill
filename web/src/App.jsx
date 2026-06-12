@@ -14,6 +14,7 @@ import Accounting from './pages/Accounting/Accounting';
 import Employees from './pages/Employees/Employees';
 import Vehicles from './pages/Vehicles/Vehicles';
 import Reports from './pages/Reports/Reports';
+import Notifications from './pages/Notifications/Notifications';
 
 function RequireAuth({ children }) {
   const { isAuthenticated } = useSelector((s) => s.auth);
@@ -35,7 +36,8 @@ export default function App() {
         <Route path="accounting/*" element={<Accounting />} />
         <Route path="employees/*"  element={<Employees />} />
         <Route path="vehicles/*"   element={<Vehicles />} />
-        <Route path="reports/*"    element={<Reports />} />
+        <Route path="reports/*"        element={<Reports />} />
+        <Route path="notifications"    element={<Notifications />} />
       </Route>
     </Routes>
   );

@@ -1,0 +1,2 @@
+[phases.build]
+cmds = ["npm ci", "VITE_API_URL=https://postgres-production-ed72c.up.railway.app npm run build"]

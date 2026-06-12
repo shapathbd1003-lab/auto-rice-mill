@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
@@ -14,6 +14,7 @@ import {
   Person, Warning,
 } from '@mui/icons-material';
 import { logout } from '../store/authSlice';
+import { setNotifications } from '../store/notificationSlice';
 import api from '../services/api';
 
 const DRAWER_WIDTH = 240;
@@ -41,6 +42,17 @@ export default function AppLayout() {
   const { unreadCount } = useSelector((s) => s.notifications);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
+
+  const fetchNotifications = useCallback(() => {
+    if (isOffline) return;
+    api.get('/notifications').then((r) => dispatch(setNotifications(r.data.data || []))).catch(() => {});
+  }, [dispatch, isOffline]);
+
+  useEffect(() => {
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 60000);
+    return () => clearInterval(interval);
+  }, [fetchNotifications]);
 
   const handleLogout = async () => {
     const rt = localStorage.getItem('refreshToken');
