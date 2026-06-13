@@ -91,6 +91,10 @@ export async function handleDesktopRequest(method, url, data, params) {
 
   // ── Inventory ────────────────────────────────────────────────────────────
   if (seg[0] === 'inventory') {
+    if (seg[1] === 'stock') {
+      const rows = await desktopDb.all(`SELECT * FROM inventory_items WHERE mill_id=? AND is_active=1 ORDER BY category, name`, [mid]);
+      return ok(rows);
+    }
     if (m === 'GET' && !seg[1]) {
       let rows = await desktopDb.all(`SELECT * FROM inventory_items WHERE mill_id=? AND is_active=1 ORDER BY name`, [mid]);
       if (params?.search) {
@@ -161,7 +165,7 @@ export async function handleDesktopRequest(method, url, data, params) {
 
   // ── Production ────────────────────────────────────────────────────────────
   if (seg[0] === 'production') {
-    if (m === 'GET' && !seg[1]) {
+    if (m === 'GET' && (!seg[1] || seg[1] === 'batches')) {
       const rows = await desktopDb.all(`SELECT * FROM production_batches WHERE mill_id=? ORDER BY date DESC`, [mid]);
       const pg = paginate(rows, params?.page, params?.limit);
       return ok(pg.rows, { total: pg.total, page: pg.page, limit: pg.limit });
@@ -230,7 +234,7 @@ export async function handleDesktopRequest(method, url, data, params) {
   // ── Vehicles ──────────────────────────────────────────────────────────────
   if (seg[0] === 'vehicles') {
     if (m === 'GET' && !seg[1]) {
-      const rows = await desktopDb.all(`SELECT * FROM vehicles WHERE mill_id=? AND deleted_at IS NULL ORDER BY registration_number`, [mid]);
+      const rows = await desktopDb.all(`SELECT * FROM vehicles WHERE mill_id=? AND is_active=1 ORDER BY number`, [mid]);
       const pg = paginate(rows, params?.page, params?.limit);
       return ok(pg.rows, { total: pg.total, page: pg.page, limit: pg.limit });
     }
@@ -246,10 +250,25 @@ export async function handleDesktopRequest(method, url, data, params) {
 
   // ── Accounting ────────────────────────────────────────────────────────────
   if (seg[0] === 'accounting') {
-    if (m === 'GET' && !seg[1]) {
-      const rows = await desktopDb.all(`SELECT * FROM journal_entries WHERE mill_id=? AND deleted_at IS NULL ORDER BY date DESC`, [mid]);
+    if (seg[1] === 'accounts') {
+      const rows = await desktopDb.all(`SELECT * FROM accounts WHERE mill_id=? ORDER BY code`, [mid]);
+      return ok(rows);
+    }
+    if (seg[1] === 'expenses') {
+      const rows = await desktopDb.all(`SELECT * FROM expenses WHERE mill_id=? ORDER BY date DESC`, [mid]);
       const pg = paginate(rows, params?.page, params?.limit);
       return ok(pg.rows, { total: pg.total, page: pg.page, limit: pg.limit });
+    }
+    if (seg[1] === 'profit-loss') {
+      const sales = await desktopDb.all(`SELECT COALESCE(SUM(total_amount),0) AS total FROM sales_orders WHERE mill_id=?`, [mid]);
+      const purchases = await desktopDb.all(`SELECT COALESCE(SUM(total_amount),0) AS total FROM purchases WHERE mill_id=?`, [mid]);
+      const expenses = await desktopDb.all(`SELECT COALESCE(SUM(amount),0) AS total FROM expenses WHERE mill_id=?`, [mid]);
+      const revenue = sales[0]?.total || 0;
+      const cost = (purchases[0]?.total || 0) + (expenses[0]?.total || 0);
+      return ok({ revenue, cost, profit: revenue - cost });
+    }
+    if (m === 'GET' && !seg[1]) {
+      return ok([]);
     }
   }
 
