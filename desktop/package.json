@@ -7,7 +7,7 @@
     "start": "electron .",
     "dev": "concurrently \"vite --config vite.config.js\" \"wait-on http://localhost:5174 && cross-env NODE_ENV=development electron .\"",
     "build": "vite build --config vite.config.js && electron-builder",
-    "dist": "electron-builder --win"
+    "dist": "vite build --config vite.config.js && electron-builder --win"
   },
   "dependencies": {
     "@emotion/react": "^11.11.1",
@@ -42,6 +42,7 @@
   "build": {
     "appId": "com.ricemillbd.app",
     "productName": "Auto Rice Mill",
+    "asar": true,
     "win": {
       "target": "nsis",
       "icon": "assets/icon.ico"
@@ -53,9 +54,9 @@
       "uninstallerIcon": "assets/icon.ico"
     },
     "files": [
-      "dist/**/*",
-      "electron/**/*",
-      "node_modules/**/*"
+      "dist/index.html",
+      "dist/assets/**/*",
+      "electron/**/*"
     ],
     "extraResources": [
       {
