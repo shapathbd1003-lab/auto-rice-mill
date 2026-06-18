@@ -22,6 +22,9 @@ import ExpenseBook from './pages/Khata/ExpenseBook';
 import DailySalesBook from './pages/Khata/DailySalesBook';
 import DailyPurchaseBook from './pages/Khata/DailyPurchaseBook';
 import ChartOfAccounts from './pages/ERP/ChartOfAccounts';
+import AccountsDashboard from './pages/ERP/AccountsDashboard';
+import LedgerGroups from './pages/ERP/LedgerGroups';
+import KhataBook from './pages/ERP/KhataBook';
 import VoucherEntry from './pages/ERP/VoucherEntry';
 import TallyReports from './pages/ERP/TallyReports';
 import Banking from './pages/ERP/Banking';
@@ -55,7 +58,10 @@ export default function App() {
         <Route path="khata/expenses"      element={<ExpenseBook />} />
         <Route path="khata/daily-sales"   element={<DailySalesBook />} />
         <Route path="khata/daily-purchase" element={<DailyPurchaseBook />} />
-        <Route path="erp/chart-of-accounts" element={<ChartOfAccounts />} />
+        <Route path="erp/accounts"           element={<AccountsDashboard />} />
+        <Route path="erp/ledger-groups"      element={<LedgerGroups />} />
+        <Route path="erp/khata/:groupId"     element={<KhataBook />} />
+        <Route path="erp/chart-of-accounts"  element={<ChartOfAccounts />} />
         <Route path="erp/vouchers"           element={<VoucherEntry />} />
         <Route path="erp/tally-reports"      element={<TallyReports />} />
         <Route path="erp/banking"            element={<Banking />} />

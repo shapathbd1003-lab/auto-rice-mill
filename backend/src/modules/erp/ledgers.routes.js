@@ -24,18 +24,30 @@ router.get('/ledger-groups', async (req, res) => {
 
 // POST /api/erp/ledger-groups
 router.post('/ledger-groups', requireRole('admin','manager','accountant'), validate(Joi.object({
-  name:      Joi.string().max(150).required(),
-  name_bn:   Joi.string().allow('',null),
-  parent_id: Joi.number().integer().allow(null),
-  nature:    Joi.string().valid('assets','liabilities','income','expenses','capital').required(),
+  name:        Joi.string().max(150).required(),
+  name_bn:     Joi.string().allow('',null),
+  parent_id:   Joi.number().integer().allow(null),
+  nature:      Joi.string().valid('assets','liabilities','income','expenses','capital').required(),
+  group_type:  Joi.string().max(30).default('general'),
+  description: Joi.string().allow('',null),
 })), async (req, res) => {
-  const { name, name_bn, parent_id, nature } = req.body;
+  const { name, name_bn, parent_id, nature, group_type, description } = req.body;
   const r = await query(
-    `INSERT INTO ledger_groups (mill_id, name, name_bn, parent_id, nature)
-     VALUES ($1,$2,$3,$4,$5) RETURNING *`,
-    [req.user.millId, name, name_bn, parent_id || null, nature]
+    `INSERT INTO ledger_groups (mill_id, name, name_bn, parent_id, nature, group_type, description)
+     VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
+    [req.user.millId, name, name_bn, parent_id || null, nature, group_type || 'general', description || null]
   );
   created(res, r.rows[0], 'Ledger group created');
+});
+
+// DELETE /api/erp/ledger-groups/:id
+router.delete('/ledger-groups/:id', requireRole('admin'), async (req, res) => {
+  const hasChildren = await query('SELECT 1 FROM ledger_groups WHERE parent_id=$1 LIMIT 1', [req.params.id]);
+  if (hasChildren.rows.length) return res.status(400).json({ success:false, error:{code:'HAS_CHILDREN',message:'Delete child groups first'} });
+  const hasLedgers = await query('SELECT 1 FROM ledgers WHERE group_id=$1 AND deleted_at IS NULL LIMIT 1', [req.params.id]);
+  if (hasLedgers.rows.length) return res.status(400).json({ success:false, error:{code:'HAS_LEDGERS',message:'Delete or move ledgers in this group first'} });
+  await query('DELETE FROM ledger_groups WHERE id=$1 AND mill_id=$2 AND is_system=FALSE', [req.params.id, req.user.millId]);
+  success(res, null, 'Group deleted');
 });
 
 // PUT /api/erp/ledger-groups/:id
@@ -83,12 +95,18 @@ router.post('/ledgers', requireRole('admin','manager','accountant'), validate(Jo
   opening_balance: Joi.number().default(0),
   opening_type:    Joi.string().valid('Dr','Cr').default('Dr'),
   notes:           Joi.string().allow('',null),
+  phone:           Joi.string().max(30).allow('',null),
+  email:           Joi.string().email().allow('',null),
+  address:         Joi.string().allow('',null),
+  contact_person:  Joi.string().max(150).allow('',null),
 })), async (req, res) => {
-  const { group_id, name, name_bn, code, opening_balance, opening_type, notes } = req.body;
+  const { group_id, name, name_bn, code, opening_balance, opening_type, notes, phone, email, address, contact_person } = req.body;
   const r = await query(
-    `INSERT INTO ledgers (mill_id, group_id, name, name_bn, code, opening_balance, opening_type, current_balance, balance_type, notes, created_by)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$6,$7,$8,$9) RETURNING *`,
-    [req.user.millId, group_id, name, name_bn, code, opening_balance || 0, opening_type || 'Dr', notes, req.user.id]
+    `INSERT INTO ledgers (mill_id, group_id, name, name_bn, code, opening_balance, opening_type,
+       current_balance, balance_type, notes, phone, email, address, contact_person, created_by)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING *`,
+    [req.user.millId, group_id, name, name_bn, code, opening_balance || 0, opening_type || 'Dr',
+     notes, phone, email, address, contact_person, req.user.id]
   );
   created(res, r.rows[0], 'Ledger created');
 });
@@ -107,7 +125,7 @@ router.get('/ledgers/:id', async (req, res) => {
 
 // PUT /api/erp/ledgers/:id
 router.put('/ledgers/:id', requireRole('admin','manager','accountant'), async (req, res) => {
-  const allowed = ['name','name_bn','code','notes','is_active'];
+  const allowed = ['name','name_bn','code','notes','is_active','phone','email','address','contact_person'];
   const sets = []; const params = []; let idx=1;
   for (const f of allowed) if (req.body[f] !== undefined) { sets.push(`${f}=$${idx++}`); params.push(req.body[f]); }
   if (!sets.length) return res.status(400).json({ success:false, error:{code:'BAD_REQUEST',message:'Nothing to update'} });

@@ -13,6 +13,7 @@ import {
   Assessment, Notifications, Menu as MenuIcon, Translate, ExitToApp,
   Person, Warning, MenuBook, AccountBalanceWallet, Receipt, ShoppingBag,
   AccountTree, ReceiptLong, BarChart, AccountBalanceRounded, Settings,
+  Folder, SpaceDashboard,
 } from '@mui/icons-material';
 import { logout } from '../store/authSlice';
 import { setNotifications } from '../store/notificationSlice';
@@ -34,11 +35,13 @@ const khataNavItems = [
 ];
 
 const erpNavItems = [
-  { key: 'chartOfAccounts', icon: <AccountTree />,           path: '/erp/chart-of-accounts' },
-  { key: 'voucherEntry',    icon: <ReceiptLong />,           path: '/erp/vouchers' },
-  { key: 'tallyReports',   icon: <BarChart />,               path: '/erp/tally-reports' },
-  { key: 'banking',        icon: <AccountBalanceRounded />,  path: '/erp/banking' },
-  { key: 'companySettings',icon: <Settings />,               path: '/erp/settings' },
+  { key: 'accountsDashboard', icon: <SpaceDashboard />,       path: '/erp/accounts' },
+  { key: 'ledgerGroups',      icon: <Folder />,               path: '/erp/ledger-groups' },
+  { key: 'chartOfAccounts',   icon: <AccountTree />,          path: '/erp/chart-of-accounts' },
+  { key: 'voucherEntry',      icon: <ReceiptLong />,          path: '/erp/vouchers' },
+  { key: 'tallyReports',      icon: <BarChart />,             path: '/erp/tally-reports' },
+  { key: 'banking',           icon: <AccountBalanceRounded />, path: '/erp/banking' },
+  { key: 'companySettings',   icon: <Settings />,             path: '/erp/settings' },
 ];
 
 const millNavItems = [

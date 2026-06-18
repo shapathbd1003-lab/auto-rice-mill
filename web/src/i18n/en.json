@@ -8,6 +8,7 @@
     "customerKhata": "Customer Khata", "supplierKhata": "Supplier Khata",
     "cashBook": "Cash Book", "expenseBook": "Expense Book",
     "dailySalesBook": "Daily Sales Book", "dailyPurchaseBook": "Daily Purchase Book",
+    "accountsDashboard": "Accounts", "ledgerGroups": "Ledger Groups",
     "chartOfAccounts": "Chart of Accounts", "voucherEntry": "Voucher Entry",
     "tallyReports": "Accounting Reports", "banking": "Banking",
     "companySettings": "Company Settings"
