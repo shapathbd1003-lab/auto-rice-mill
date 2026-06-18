@@ -21,6 +21,11 @@ import CashBook from './pages/Khata/CashBook';
 import ExpenseBook from './pages/Khata/ExpenseBook';
 import DailySalesBook from './pages/Khata/DailySalesBook';
 import DailyPurchaseBook from './pages/Khata/DailyPurchaseBook';
+import ChartOfAccounts from './pages/ERP/ChartOfAccounts';
+import VoucherEntry from './pages/ERP/VoucherEntry';
+import TallyReports from './pages/ERP/TallyReports';
+import Banking from './pages/ERP/Banking';
+import CompanySettings from './pages/ERP/CompanySettings';
 
 function RequireAuth({ children }) {
   const { isAuthenticated } = useSelector((s) => s.auth);
@@ -50,6 +55,11 @@ export default function App() {
         <Route path="khata/expenses"      element={<ExpenseBook />} />
         <Route path="khata/daily-sales"   element={<DailySalesBook />} />
         <Route path="khata/daily-purchase" element={<DailyPurchaseBook />} />
+        <Route path="erp/chart-of-accounts" element={<ChartOfAccounts />} />
+        <Route path="erp/vouchers"           element={<VoucherEntry />} />
+        <Route path="erp/tally-reports"      element={<TallyReports />} />
+        <Route path="erp/banking"            element={<Banking />} />
+        <Route path="erp/settings"           element={<CompanySettings />} />
       </Route>
     </Routes>
   );

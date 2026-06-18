@@ -7,7 +7,10 @@
     "vehicles": "Vehicles", "reports": "Reports", "settings": "Settings",
     "customerKhata": "Customer Khata", "supplierKhata": "Supplier Khata",
     "cashBook": "Cash Book", "expenseBook": "Expense Book",
-    "dailySalesBook": "Daily Sales Book", "dailyPurchaseBook": "Daily Purchase Book"
+    "dailySalesBook": "Daily Sales Book", "dailyPurchaseBook": "Daily Purchase Book",
+    "chartOfAccounts": "Chart of Accounts", "voucherEntry": "Voucher Entry",
+    "tallyReports": "Accounting Reports", "banking": "Banking",
+    "companySettings": "Company Settings"
   },
   "common": {
     "save": "Save", "cancel": "Cancel", "delete": "Delete", "edit": "Edit",

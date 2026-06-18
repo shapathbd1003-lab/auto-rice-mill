@@ -12,6 +12,7 @@ import {
   PointOfSale, AccountBalance, Badge as BadgeIcon, DirectionsCar,
   Assessment, Notifications, Menu as MenuIcon, Translate, ExitToApp,
   Person, Warning, MenuBook, AccountBalanceWallet, Receipt, ShoppingBag,
+  AccountTree, ReceiptLong, BarChart, AccountBalanceRounded, Settings,
 } from '@mui/icons-material';
 import { logout } from '../store/authSlice';
 import { setNotifications } from '../store/notificationSlice';
@@ -30,6 +31,14 @@ const khataNavItems = [
   { key: 'expenseBook',      icon: <Receipt />,                 path: '/khata/expenses' },
   { key: 'dailySalesBook',   icon: <PointOfSale />,             path: '/khata/daily-sales' },
   { key: 'dailyPurchaseBook',icon: <ShoppingBag />,             path: '/khata/daily-purchase' },
+];
+
+const erpNavItems = [
+  { key: 'chartOfAccounts', icon: <AccountTree />,           path: '/erp/chart-of-accounts' },
+  { key: 'voucherEntry',    icon: <ReceiptLong />,           path: '/erp/vouchers' },
+  { key: 'tallyReports',   icon: <BarChart />,               path: '/erp/tally-reports' },
+  { key: 'banking',        icon: <AccountBalanceRounded />,  path: '/erp/banking' },
+  { key: 'companySettings',icon: <Settings />,               path: '/erp/settings' },
 ];
 
 const millNavItems = [
@@ -108,6 +117,16 @@ export default function AppLayout() {
       </Box>
       <List dense>
         {khataNavItems.map(({ key, icon, path }) => (
+          <NavItem key={key} icon={icon} path={path} label={t(`nav.${key}`)} />
+        ))}
+      </List>
+
+      <Divider />
+      <Box sx={{ px: 2, py: 0.5 }}>
+        <Typography variant="caption" color="text.secondary" fontWeight="bold">TALLY ERP</Typography>
+      </Box>
+      <List dense>
+        {erpNavItems.map(({ key, icon, path }) => (
           <NavItem key={key} icon={icon} path={path} label={t(`nav.${key}`)} />
         ))}
       </List>

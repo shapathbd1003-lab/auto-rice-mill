@@ -7,7 +7,10 @@
     "vehicles": "যানবাহন", "reports": "রিপোর্ট", "settings": "সেটিংস",
     "customerKhata": "কাস্টমার খাতা", "supplierKhata": "সাপ্লায়ার খাতা",
     "cashBook": "নগদ বই", "expenseBook": "খরচের বই",
-    "dailySalesBook": "দৈনিক বিক্রয় বই", "dailyPurchaseBook": "দৈনিক ক্রয় বই"
+    "dailySalesBook": "দৈনিক বিক্রয় বই", "dailyPurchaseBook": "দৈনিক ক্রয় বই",
+    "chartOfAccounts": "হিসাবের তালিকা", "voucherEntry": "ভাউচার এন্ট্রি",
+    "tallyReports": "হিসাব রিপোর্ট", "banking": "ব্যাংকিং",
+    "companySettings": "কোম্পানি সেটিংস"
   },
   "common": {
     "save": "সংরক্ষণ করুন", "cancel": "বাতিল", "delete": "মুছুন", "edit": "সম্পাদনা",
