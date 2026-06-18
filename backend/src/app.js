@@ -22,6 +22,8 @@ const vehicleRoutes      = require('./modules/vehicles/vehicles.routes');
 const reportRoutes       = require('./modules/reports/reports.routes');
 const notificationRoutes = require('./modules/notifications/notifications.routes');
 const syncRoutes         = require('./modules/sync/sync.routes');
+const khataRoutes        = require('./modules/khata/khata.routes');
+const cashbookRoutes     = require('./modules/khata/cashbook.routes');
 
 const app = express();
 
@@ -63,6 +65,8 @@ app.use('/api/vehicles',      vehicleRoutes);
 app.use('/api/reports',       reportRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/sync',          syncRoutes);
+app.use('/api/khata',         khataRoutes);
+app.use('/api/khata/cashbook', cashbookRoutes);
 
 // 404
 app.use((_req, res) => res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Route not found' } }));

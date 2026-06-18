@@ -47,4 +47,9 @@ async function recordPayment(req, res) {
   success(res, null, 'Payment recorded');
 }
 
-module.exports = { list, getById, create, update, remove, getLedger, recordPayment };
+async function recordDue(req, res) {
+  await service.recordDue(req.user.millId, req.params.id, req.body, req.user.id);
+  success(res, null, 'Due recorded');
+}
+
+module.exports = { list, getById, create, update, remove, getLedger, recordPayment, recordDue };

@@ -57,4 +57,22 @@ async function recordPayment(millId, customerId, { amount, date, description, ac
   }
 }
 
-module.exports = { list, getById, create, update, remove, getLedger, recordPayment };
+async function recordDue(millId, customerId, { amount, date, description }, userId) {
+  await getById(millId, customerId);
+  const client = await getClient();
+  try {
+    await client.query('BEGIN');
+    await repo.addLedgerEntry(client, {
+      millId, customerId, date, description: description || 'Due added',
+      debit: amount, credit: 0, referenceType: 'due', referenceId: null, createdBy: userId,
+    });
+    await client.query('COMMIT');
+  } catch (e) {
+    await client.query('ROLLBACK');
+    throw e;
+  } finally {
+    client.release();
+  }
+}
+
+module.exports = { list, getById, create, update, remove, getLedger, recordPayment, recordDue };

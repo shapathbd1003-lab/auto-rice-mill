@@ -4,7 +4,10 @@
     "dashboard": "Dashboard", "customers": "Customers", "suppliers": "Suppliers",
     "purchases": "Purchases", "production": "Production", "inventory": "Inventory",
     "sales": "Sales", "accounting": "Accounting", "employees": "Employees",
-    "vehicles": "Vehicles", "reports": "Reports", "settings": "Settings"
+    "vehicles": "Vehicles", "reports": "Reports", "settings": "Settings",
+    "customerKhata": "Customer Khata", "supplierKhata": "Supplier Khata",
+    "cashBook": "Cash Book", "expenseBook": "Expense Book",
+    "dailySalesBook": "Daily Sales Book", "dailyPurchaseBook": "Daily Purchase Book"
   },
   "common": {
     "save": "Save", "cancel": "Cancel", "delete": "Delete", "edit": "Edit",

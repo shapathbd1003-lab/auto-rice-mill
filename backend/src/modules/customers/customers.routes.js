@@ -31,5 +31,6 @@ router.put('/:id',            requireRole('admin','manager','sales'), validate(u
 router.delete('/:id',         requireRole('admin','manager'), ctrl.remove);
 router.get('/:id/ledger',     ctrl.getLedger);
 router.post('/:id/payment',   requireRole('admin','manager','accountant','sales'), validate(paymentSchema), ctrl.recordPayment);
+router.post('/:id/due',       requireRole('admin','manager','accountant','sales'), validate(paymentSchema), ctrl.recordDue);
 
 module.exports = router;

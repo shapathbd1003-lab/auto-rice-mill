@@ -1,127 +1,204 @@
 import React, { useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { Grid, Card, CardContent, Typography, Box, Chip, CircularProgress, Alert } from '@mui/material';
-import { TrendingUp, Inventory, Warning, AccountBalance } from '@mui/icons-material';
+import {
+  Grid, Card, CardContent, Typography, Box, Chip, CircularProgress, Alert,
+  Paper, List, ListItem, ListItemText, Divider, Button,
+} from '@mui/material';
+import {
+  TrendingUp, TrendingDown, People, LocalShipping, AccountBalanceWallet, Warning,
+} from '@mui/icons-material';
 import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
-import { isDesktop, desktopDb } from '../../services/desktopAdapter';
 
-function StatCard({ title, value, icon, color, subtitle }) {
+const fmt = (n) => `৳ ${Number(n || 0).toLocaleString('en-IN')}`;
+
+function KhataCard({ title, value, subtitle, icon, color, onClick }) {
   return (
-    <Card>
-      <CardContent>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-          <Box sx={{ bgcolor: `${color}.light`, borderRadius: 2, p: 1, mr: 2 }}>{icon}</Box>
-          <Typography variant="body2" color="text.secondary">{title}</Typography>
+    <Card onClick={onClick} sx={{ cursor: onClick ? 'pointer' : 'default', '&:hover': onClick ? { boxShadow: 4 } : {} }}>
+      <CardContent sx={{ pb: '12px !important' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+          <Typography variant="body2" color="text.secondary" fontWeight="medium">{title}</Typography>
+          <Box sx={{ bgcolor: `${color}.100`, borderRadius: '50%', p: 0.7, display: 'flex' }}>{icon}</Box>
         </Box>
-        <Typography variant="h4" fontWeight="bold" color={`${color}.main`}>{value}</Typography>
+        <Typography variant="h5" fontWeight="bold" color={`${color}.main`}>{value}</Typography>
         {subtitle && <Typography variant="caption" color="text.secondary">{subtitle}</Typography>}
       </CardContent>
     </Card>
   );
 }
 
-async function fetchDesktopDashboard(millId) {
-  const today = new Date().toISOString().slice(0, 10);
-  const [salesRow, prodRow, dueRow, lowStock, stock] = await Promise.all([
-    desktopDb.get(`SELECT COALESCE(SUM(total_amount),0) AS total, COUNT(*) AS count FROM sales_orders WHERE mill_id=? AND date=? AND deleted_at IS NULL`, [millId, today]),
-    desktopDb.get(`SELECT COALESCE(SUM(paddy_quantity),0) AS total, COUNT(*) AS count FROM production_batches WHERE mill_id=? AND date=?`, [millId, today]),
-    desktopDb.get(`SELECT COALESCE(SUM(balance),0) AS total FROM customers WHERE mill_id=? AND balance > 0`, [millId]),
-    desktopDb.all(`SELECT id, name, current_stock, reorder_level, unit FROM inventory_items WHERE mill_id=? AND is_active=1 AND current_stock <= reorder_level`, [millId]),
-    desktopDb.all(`SELECT category, COALESCE(SUM(current_stock),0) AS total FROM inventory_items WHERE mill_id=? AND is_active=1 GROUP BY category`, [millId]),
-  ]);
-  return {
-    todaySales:     { total: salesRow?.total || 0, count: salesRow?.count || 0 },
-    todayProduction:{ total: prodRow?.total  || 0, count: prodRow?.count  || 0 },
-    totalDue:       dueRow?.total || 0,
-    lowStockItems:  lowStock || [],
-    stockByCategory:stock    || [],
-  };
-}
+const TX_TYPE_LABELS = {
+  sale: { label: 'Sale', color: 'success' },
+  purchase: { label: 'Purchase', color: 'warning' },
+  cash_in: { label: 'Cash In', color: 'success' },
+  cash_out: { label: 'Cash Out', color: 'error' },
+};
 
 export default function Dashboard() {
-  const { t } = useTranslation();
   const { user } = useSelector((s) => s.auth);
+  const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (isDesktop) {
-      fetchDesktopDashboard(user?.millId || 1)
-        .then(setData)
-        .catch(() => setError('Failed to load dashboard'))
-        .finally(() => setLoading(false));
-    } else {
-      api.get('/dashboard')
-        .then((r) => setData(r.data.data))
-        .catch(() => setError('Failed to load dashboard'))
-        .finally(() => setLoading(false));
-    }
-  }, [user]);
+    api.get('/khata/summary')
+      .then((r) => setData(r.data.data))
+      .catch(() => {
+        // fallback to old dashboard endpoint if khata not yet migrated
+        api.get('/dashboard')
+          .then((r) => setData(r.data.data))
+          .catch(() => setError('Failed to load dashboard'));
+      })
+      .finally(() => setLoading(false));
+  }, []);
 
   if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 6 }}><CircularProgress /></Box>;
-  if (error || !data) return <Alert severity="error">{error || 'No data'}</Alert>;
+  if (error)   return <Alert severity="error">{error}</Alert>;
+  if (!data)   return null;
 
-  const fmt = (n) => `৳ ${Number(n || 0).toLocaleString('en-IN')}`;
+  const cards = [
+    {
+      title: "Today's Sales",
+      value: fmt(data.todaySales?.total),
+      subtitle: `${data.todaySales?.count || 0} invoices`,
+      icon: <TrendingUp sx={{ color: 'success.main', fontSize: 20 }} />,
+      color: 'success',
+      path: '/khata/daily-sales',
+    },
+    {
+      title: "Today's Purchases",
+      value: fmt(data.todayPurchases?.total),
+      subtitle: `${data.todayPurchases?.count || 0} entries`,
+      icon: <TrendingDown sx={{ color: 'warning.main', fontSize: 20 }} />,
+      color: 'warning',
+      path: '/khata/daily-purchase',
+    },
+    {
+      title: 'Customer Due',
+      value: fmt(data.customerDue?.total),
+      subtitle: `${data.customerDue?.count || 0} customers`,
+      icon: <People sx={{ color: 'error.main', fontSize: 20 }} />,
+      color: 'error',
+      path: '/khata/customers',
+    },
+    {
+      title: 'Supplier Due',
+      value: fmt(data.supplierDue?.total),
+      subtitle: `${data.supplierDue?.count || 0} suppliers`,
+      icon: <LocalShipping sx={{ color: 'orange', fontSize: 20 }} />,
+      color: 'warning',
+      path: '/khata/suppliers',
+    },
+    {
+      title: 'Cash Balance',
+      value: fmt(data.cashBalance),
+      subtitle: 'All accounts',
+      icon: <AccountBalanceWallet sx={{ color: 'primary.main', fontSize: 20 }} />,
+      color: 'primary',
+      path: '/khata/cashbook',
+    },
+    {
+      title: 'Low Stock',
+      value: data.lowStockItems?.length || 0,
+      subtitle: 'items below reorder',
+      icon: <Warning sx={{ color: 'error.main', fontSize: 20 }} />,
+      color: 'error',
+      path: '/inventory',
+    },
+  ];
 
   return (
     <Box>
-      <Typography variant="h5" fontWeight="bold" sx={{ mb: 3 }}>
-        {t('dashboard.todaySales')} — {new Date().toLocaleDateString('en-IN')}
-      </Typography>
-      <Grid container spacing={3}>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard title={t('dashboard.todaySales')} value={fmt(data.todaySales?.total)}
-            subtitle={`${data.todaySales?.count} invoices`} icon={<TrendingUp sx={{ color: 'success.main' }} />} color="success" />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard title={t('dashboard.todayProduction')} value={`${Number(data.todayProduction?.total || 0).toLocaleString()} kg`}
-            subtitle={`${data.todayProduction?.count} batches`} icon={<Inventory sx={{ color: 'primary.main' }} />} color="primary" />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard title={t('dashboard.totalDue')} value={fmt(data.totalDue)}
-            icon={<AccountBalance sx={{ color: 'warning.main' }} />} color="warning" />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard title={t('dashboard.lowStock')} value={data.lowStockItems?.length || 0}
-            subtitle="items below reorder level" icon={<Warning sx={{ color: 'error.main' }} />} color="error" />
-        </Grid>
+      {/* Greeting */}
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h5" fontWeight="bold">
+          আস্সালামু আলাইকুম, {user?.name?.split(' ')[0] || 'Admin'}
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          {new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+        </Typography>
+      </Box>
 
-        <Grid item xs={12} md={6}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>{t('dashboard.stockSummary')}</Typography>
-              {(data.stockByCategory || []).length === 0
-                ? <Typography variant="body2" color="text.secondary">No stock data yet</Typography>
-                : (data.stockByCategory || []).map((row) => (
-                  <Box key={row.category} sx={{ display: 'flex', justifyContent: 'space-between', py: 0.5, borderBottom: '1px solid #f0f0f0' }}>
-                    <Typography variant="body2" sx={{ textTransform: 'capitalize' }}>{row.category}</Typography>
-                    <Typography variant="body2" fontWeight="bold">{Number(row.total).toLocaleString()} kg</Typography>
-                  </Box>
-                ))}
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {(data.lowStockItems || []).length > 0 && (
-          <Grid item xs={12} md={6}>
-            <Card sx={{ border: '1px solid #ffcdd2' }}>
-              <CardContent>
-                <Typography variant="h6" fontWeight="bold" color="error" sx={{ mb: 2 }}>
-                  <Warning fontSize="small" sx={{ mr: 1, verticalAlign: 'middle' }} />
-                  {t('dashboard.lowStock')}
-                </Typography>
-                {data.lowStockItems.map((item) => (
-                  <Box key={item.id} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 0.5 }}>
-                    <Typography variant="body2">{item.name}</Typography>
-                    <Chip label={`${item.current_stock} ${item.unit}`} size="small" color="error" variant="outlined" />
-                  </Box>
-                ))}
-              </CardContent>
-            </Card>
+      {/* 6 KPI cards */}
+      <Grid container spacing={2} sx={{ mb: 3 }}>
+        {cards.map((c) => (
+          <Grid item xs={6} sm={4} md={2} key={c.title}>
+            <KhataCard {...c} onClick={() => navigate(c.path)} />
           </Grid>
-        )}
+        ))}
+      </Grid>
+
+      <Grid container spacing={2}>
+        {/* Recent Transactions */}
+        <Grid item xs={12} md={7}>
+          <Paper>
+            <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #eee' }}>
+              <Typography variant="subtitle1" fontWeight="bold">Recent Transactions</Typography>
+            </Box>
+            <List dense>
+              {(data.recentTransactions || []).length === 0 ? (
+                <ListItem><ListItemText secondary="No recent transactions" /></ListItem>
+              ) : (data.recentTransactions || []).map((tx, i) => {
+                const meta = TX_TYPE_LABELS[tx.type] || { label: tx.type, color: 'default' };
+                return (
+                  <React.Fragment key={i}>
+                    <ListItem>
+                      <ListItemText
+                        primary={<Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Chip label={meta.label} size="small" color={meta.color} />
+                            <Typography variant="body2">{tx.ref}</Typography>
+                          </Box>
+                          <Typography variant="body2" fontWeight="bold">{fmt(tx.amount)}</Typography>
+                        </Box>}
+                        secondary={new Date(tx.date).toLocaleDateString('en-IN')}
+                      />
+                    </ListItem>
+                    {i < (data.recentTransactions?.length || 0) - 1 && <Divider />}
+                  </React.Fragment>
+                );
+              })}
+            </List>
+          </Paper>
+        </Grid>
+
+        {/* Quick Actions */}
+        <Grid item xs={12} md={5}>
+          <Paper sx={{ p: 2 }}>
+            <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 2 }}>Quick Actions</Typography>
+            <Grid container spacing={1}>
+              {[
+                { label: 'New Sale', path: '/khata/daily-sales', color: 'success' },
+                { label: 'New Purchase', path: '/khata/daily-purchase', color: 'warning' },
+                { label: 'Cash In', path: '/khata/cashbook', color: 'primary' },
+                { label: 'Add Expense', path: '/khata/expenses', color: 'error' },
+                { label: 'Customer Khata', path: '/khata/customers', color: 'inherit' },
+                { label: 'Supplier Khata', path: '/khata/suppliers', color: 'inherit' },
+              ].map((a) => (
+                <Grid item xs={6} key={a.label}>
+                  <Button fullWidth variant="outlined" color={a.color} size="small"
+                    onClick={() => navigate(a.path)} sx={{ justifyContent: 'flex-start', textTransform: 'none' }}>
+                    {a.label}
+                  </Button>
+                </Grid>
+              ))}
+            </Grid>
+          </Paper>
+
+          {/* Stock summary (if available) */}
+          {(data.stockByCategory || []).length > 0 && (
+            <Paper sx={{ mt: 2, p: 2 }}>
+              <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 1 }}>Stock Summary</Typography>
+              {data.stockByCategory.map((row) => (
+                <Box key={row.category} sx={{ display: 'flex', justifyContent: 'space-between', py: 0.5 }}>
+                  <Typography variant="body2" sx={{ textTransform: 'capitalize' }}>{row.category}</Typography>
+                  <Typography variant="body2" fontWeight="bold">{Number(row.total).toLocaleString()} kg</Typography>
+                </Box>
+              ))}
+            </Paper>
+          )}
+        </Grid>
       </Grid>
     </Box>
   );

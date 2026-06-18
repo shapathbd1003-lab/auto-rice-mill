@@ -15,6 +15,12 @@ import Employees from './pages/Employees/Employees';
 import Vehicles from './pages/Vehicles/Vehicles';
 import Reports from './pages/Reports/Reports';
 import Notifications from './pages/Notifications/Notifications';
+import CustomerKhata from './pages/Khata/CustomerKhata';
+import SupplierKhata from './pages/Khata/SupplierKhata';
+import CashBook from './pages/Khata/CashBook';
+import ExpenseBook from './pages/Khata/ExpenseBook';
+import DailySalesBook from './pages/Khata/DailySalesBook';
+import DailyPurchaseBook from './pages/Khata/DailyPurchaseBook';
 
 function RequireAuth({ children }) {
   const { isAuthenticated } = useSelector((s) => s.auth);
@@ -38,6 +44,12 @@ export default function App() {
         <Route path="vehicles/*"   element={<Vehicles />} />
         <Route path="reports/*"        element={<Reports />} />
         <Route path="notifications"    element={<Notifications />} />
+        <Route path="khata/customers"     element={<CustomerKhata />} />
+        <Route path="khata/suppliers"     element={<SupplierKhata />} />
+        <Route path="khata/cashbook"      element={<CashBook />} />
+        <Route path="khata/expenses"      element={<ExpenseBook />} />
+        <Route path="khata/daily-sales"   element={<DailySalesBook />} />
+        <Route path="khata/daily-purchase" element={<DailyPurchaseBook />} />
       </Route>
     </Routes>
   );

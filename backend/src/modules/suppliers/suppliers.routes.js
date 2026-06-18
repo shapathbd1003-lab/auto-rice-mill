@@ -100,4 +100,33 @@ router.post('/:id/payment', requireRole('admin','manager','accountant'), async (
   }
 });
 
+// POST /api/suppliers/:id/due — add purchase due to supplier ledger (khata)
+router.post('/:id/due', requireRole('admin','manager','accountant'), async (req, res) => {
+  const { amount, date, description } = req.body;
+  const millId = req.user.millId;
+  const suppRes = await query('SELECT balance FROM suppliers WHERE id=$1 AND mill_id=$2 AND deleted_at IS NULL', [req.params.id, millId]);
+  if (!suppRes.rows[0]) return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Supplier not found' } });
+
+  const client = await getClient();
+  try {
+    await client.query('BEGIN');
+    const prev = await client.query('SELECT balance FROM supplier_ledger WHERE supplier_id=$1 ORDER BY id DESC LIMIT 1', [req.params.id]);
+    const prevBal = prev.rows[0]?.balance ?? suppRes.rows[0].balance;
+    const newBal = prevBal + Number(amount);
+    await client.query(
+      `INSERT INTO supplier_ledger (mill_id,supplier_id,date,description,debit,credit,balance,reference_type,created_by)
+       VALUES ($1,$2,$3,$4,0,$5,$6,'due',$7)`,
+      [millId, req.params.id, date, description || 'Purchase due', amount, newBal, req.user.id]
+    );
+    await client.query('UPDATE suppliers SET balance=$1,updated_at=NOW() WHERE id=$2', [newBal, req.params.id]);
+    await client.query('COMMIT');
+    success(res, null, 'Due recorded');
+  } catch (e) {
+    await client.query('ROLLBACK');
+    throw e;
+  } finally {
+    client.release();
+  }
+});
+
 module.exports = router;

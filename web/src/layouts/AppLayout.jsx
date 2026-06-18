@@ -11,7 +11,7 @@ import {
   Dashboard, People, LocalShipping, ShoppingCart, Factory, Inventory2,
   PointOfSale, AccountBalance, Badge as BadgeIcon, DirectionsCar,
   Assessment, Notifications, Menu as MenuIcon, Translate, ExitToApp,
-  Person, Warning,
+  Person, Warning, MenuBook, AccountBalanceWallet, Receipt, ShoppingBag,
 } from '@mui/icons-material';
 import { logout } from '../store/authSlice';
 import { setNotifications } from '../store/notificationSlice';
@@ -21,8 +21,18 @@ const DRAWER_WIDTH = 240;
 
 const navItems = [
   { key: 'dashboard',  icon: <Dashboard />,       path: '/' },
-  { key: 'customers',  icon: <People />,           path: '/customers' },
-  { key: 'suppliers',  icon: <LocalShipping />,    path: '/suppliers' },
+];
+
+const khataNavItems = [
+  { key: 'customerKhata',    icon: <People />,                  path: '/khata/customers' },
+  { key: 'supplierKhata',    icon: <LocalShipping />,           path: '/khata/suppliers' },
+  { key: 'cashBook',         icon: <AccountBalanceWallet />,    path: '/khata/cashbook' },
+  { key: 'expenseBook',      icon: <Receipt />,                 path: '/khata/expenses' },
+  { key: 'dailySalesBook',   icon: <PointOfSale />,             path: '/khata/daily-sales' },
+  { key: 'dailyPurchaseBook',icon: <ShoppingBag />,             path: '/khata/daily-purchase' },
+];
+
+const millNavItems = [
   { key: 'purchases',  icon: <ShoppingCart />,     path: '/purchases' },
   { key: 'production', icon: <Factory />,          path: '/production' },
   { key: 'inventory',  icon: <Inventory2 />,       path: '/inventory' },
@@ -67,6 +77,19 @@ export default function AppLayout() {
     localStorage.setItem('lang', next);
   };
 
+  const NavItem = ({ icon, path, label }) => (
+    <ListItem disablePadding>
+      <ListItemButton
+        selected={location.pathname === path || (path !== '/' && location.pathname.startsWith(path))}
+        onClick={() => { navigate(path); setMobileOpen(false); }}
+        sx={{ '&.Mui-selected': { bgcolor: 'primary.light', color: 'white', '& .MuiSvgIcon-root': { color: 'white' } } }}
+      >
+        <ListItemIcon sx={{ minWidth: 36 }}>{icon}</ListItemIcon>
+        <ListItemText primary={label} />
+      </ListItemButton>
+    </ListItem>
+  );
+
   const drawer = (
     <Box>
       <Box sx={{ p: 2, bgcolor: 'primary.main', color: 'white' }}>
@@ -75,16 +98,27 @@ export default function AppLayout() {
       </Box>
       <List dense>
         {navItems.map(({ key, icon, path }) => (
-          <ListItem key={key} disablePadding>
-            <ListItemButton
-              selected={location.pathname === path || (path !== '/' && location.pathname.startsWith(path))}
-              onClick={() => { navigate(path); setMobileOpen(false); }}
-              sx={{ '&.Mui-selected': { bgcolor: 'primary.light', color: 'white', '& .MuiSvgIcon-root': { color: 'white' } } }}
-            >
-              <ListItemIcon sx={{ minWidth: 36 }}>{icon}</ListItemIcon>
-              <ListItemText primary={t(`nav.${key}`)} />
-            </ListItemButton>
-          </ListItem>
+          <NavItem key={key} icon={icon} path={path} label={t(`nav.${key}`)} />
+        ))}
+      </List>
+
+      <Divider />
+      <Box sx={{ px: 2, py: 0.5 }}>
+        <Typography variant="caption" color="text.secondary" fontWeight="bold">KHATA BOOK</Typography>
+      </Box>
+      <List dense>
+        {khataNavItems.map(({ key, icon, path }) => (
+          <NavItem key={key} icon={icon} path={path} label={t(`nav.${key}`)} />
+        ))}
+      </List>
+
+      <Divider />
+      <Box sx={{ px: 2, py: 0.5 }}>
+        <Typography variant="caption" color="text.secondary" fontWeight="bold">RICE MILL</Typography>
+      </Box>
+      <List dense>
+        {millNavItems.map(({ key, icon, path }) => (
+          <NavItem key={key} icon={icon} path={path} label={t(`nav.${key}`)} />
         ))}
       </List>
     </Box>

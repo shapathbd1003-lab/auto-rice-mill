@@ -4,7 +4,10 @@
     "dashboard": "ড্যাশবোর্ড", "customers": "গ্রাহক", "suppliers": "সরবরাহকারী",
     "purchases": "ক্রয়", "production": "উৎপাদন", "inventory": "ইনভেন্টরি",
     "sales": "বিক্রয়", "accounting": "হিসাব", "employees": "কর্মচারী",
-    "vehicles": "যানবাহন", "reports": "রিপোর্ট", "settings": "সেটিংস"
+    "vehicles": "যানবাহন", "reports": "রিপোর্ট", "settings": "সেটিংস",
+    "customerKhata": "কাস্টমার খাতা", "supplierKhata": "সাপ্লায়ার খাতা",
+    "cashBook": "নগদ বই", "expenseBook": "খরচের বই",
+    "dailySalesBook": "দৈনিক বিক্রয় বই", "dailyPurchaseBook": "দৈনিক ক্রয় বই"
   },
   "common": {
     "save": "সংরক্ষণ করুন", "cancel": "বাতিল", "delete": "মুছুন", "edit": "সম্পাদনা",
