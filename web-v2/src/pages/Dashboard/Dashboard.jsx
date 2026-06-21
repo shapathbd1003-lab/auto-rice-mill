@@ -102,7 +102,8 @@ export default function Dashboard() {
   const { user } = useSelector((s) => s.auth);
   const navigate  = useNavigate();
   const isAdmin   = user?.isAdmin;
-  const userRoles = user?.roles || [];
+  // Deduplicate roles (in case of API returning duplicates)
+  const userRoles = [...new Set(user?.roles || [])];
   const primaryRole = userRoles[0] || 'Staff';
 
   const [data, setData] = useState({ summary:{}, profit:{} });
@@ -167,7 +168,8 @@ export default function Dashboard() {
     else if (primaryRole === 'Sales Executive') kpis = salesKpis;
     else if (primaryRole === 'Store Keeper' || primaryRole === 'Production Operator') kpis = storeKpis;
     else if (primaryRole === 'Cashier') kpis = cashierKpis;
-    else kpis = salesKpis; // default for unknown roles
+    else if (primaryRole === 'Manager') kpis = adminKpis;
+    else kpis = adminKpis; // Unknown custom roles get full view — admin can restrict via permissions
   }
 
   const quickActions = getQuickActions(userRoles);

@@ -187,7 +187,7 @@ export default function AppLayoutV2() {
       <Box sx={{ p:1.5, bgcolor:'#f5f5f5' }}>
         <Typography variant="caption" fontWeight="bold" color="text.secondary">{user?.name}</Typography>
         <Box sx={{ display:'flex', flexWrap:'wrap', gap:0.5, mt:0.3 }}>
-          {(user?.roles||[]).slice(0,2).map((r) => <Chip key={r} label={r} size="small" sx={{ fontSize:9, height:16 }}/>)}
+          {[...new Set(user?.roles||[])].slice(0,2).map((r) => <Chip key={r} label={r} size="small" sx={{ fontSize:9, height:16 }}/>)}
         </Box>
       </Box>
     </Box>
