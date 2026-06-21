@@ -50,10 +50,32 @@ export default function Purchases() {
   }, []);
 
   const handleSave = async () => {
+    if (!form.supplierId) { alert(t('purchase.supplierLabel')); return; }
+    if (!form.grossWeight || !form.unitPrice) { alert(t('purchase.grossWeightLabel')); return; }
+    if (totalAmount <= 0) { alert(t('purchase.totalLabel')); return; }
     setSaving(true);
     try {
-      await api.post('/purchases', { ...form, netWeight: netWeight.toFixed(3), totalAmount: totalAmount.toFixed(2) });
-      setFormOpen(false); load();
+      await api.post('/purchases', {
+        supplierId:    form.supplierId,
+        vehicleId:     form.vehicleId || null,
+        date:          form.date,
+        grossWeight:   Number(form.grossWeight) || null,
+        tareWeight:    Number(form.tareWeight)  || 0,
+        netWeight:     Number(netWeight.toFixed(3)),
+        moisturePct:   Number(form.moisturePct) || null,
+        unitPrice:     Number(form.unitPrice)   || null,
+        transportCost: Number(form.transportCost) || 0,
+        otherCost:     Number(form.otherCost)   || 0,
+        totalAmount:   Number(totalAmount.toFixed(2)),
+        paidAmount:    Number(form.paidAmount)  || 0,
+        paddyItemId:   form.paddyItemId || null,
+        notes:         form.notes || null,
+      });
+      setFormOpen(false);
+      setForm({ supplierId: null, vehicleId: null, date: new Date().toISOString().slice(0, 10), grossWeight: '', tareWeight: '', moisturePct: '', unitPrice: '', transportCost: 0, otherCost: 0, paidAmount: 0, paddyItemId: null, notes: '' });
+      load();
+    } catch (e) {
+      alert(e.response?.data?.error?.message || t('common.noData'));
     } finally { setSaving(false); }
   };
 

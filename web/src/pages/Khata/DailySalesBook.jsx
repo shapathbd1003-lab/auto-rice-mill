@@ -79,10 +79,12 @@ export default function DailySalesBook() {
     setSaving(true); setError('');
     try {
       await api.post('/sales', {
-        customer_id: form.customer.id, date: form.date,
-        sale_type: form.sale_type, notes: form.notes,
-        paid_amount: Number(form.paid_amount),
-        items: form.lines.map((l) => ({ item_id: l.item.id, quantity: Number(l.quantity), unit_price: Number(l.unit_price) })),
+        customerId:  form.customer.id,
+        date:        form.date,
+        saleType:    form.sale_type,
+        notes:       form.notes,
+        paidAmount:  Number(form.paid_amount),
+        items:       form.lines.map((l) => ({ itemId: l.item.id, quantity: Number(l.quantity), unitPrice: Number(l.unit_price) })),
       });
       setDialog(false); load();
     } catch (e) { setError(e.response?.data?.error?.message || t('common.noData')); }

@@ -66,12 +66,17 @@ export default function DailyPurchaseBook() {
     setSaving(true); setError('');
     try {
       await api.post('/purchases', {
-        supplier_id: form.supplier.id, date: form.date,
-        gross_weight: Number(form.gross_weight), tare_weight: Number(form.tare_weight || 0),
-        net_weight: netWeight, unit_price: Number(form.unit_price),
-        subtotal, transport_cost: Number(form.transport_cost || 0),
-        other_cost: 0, total_amount: total,
-        paid_amount: Number(form.paid_amount || 0), due_amount: due, notes: form.notes,
+        supplierId:    form.supplier.id,
+        date:          form.date,
+        grossWeight:   Number(form.gross_weight),
+        tareWeight:    Number(form.tare_weight || 0),
+        netWeight:     Number(netWeight.toFixed(3)),
+        unitPrice:     Number(form.unit_price),
+        transportCost: Number(form.transport_cost || 0),
+        otherCost:     0,
+        totalAmount:   Number(total.toFixed(2)),
+        paidAmount:    Number(form.paid_amount || 0),
+        notes:         form.notes || null,
       });
       setDialog(false); load();
     } catch (e) { setError(e.response?.data?.error?.message || t('common.noData')); }
