@@ -195,6 +195,7 @@ function UsersTab() {
   const [form, setForm] = useState({ name:'', email:'', phone:'', password:'', role_ids:[], is_active:true });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
 
   const load = () => {
     setLoading(true);
@@ -206,6 +207,13 @@ function UsersTab() {
 
   const openAdd = () => { setEditUser(null); setForm({ name:'', email:'', phone:'', password:'', role_ids:[], is_active:true }); setError(''); setDialog(true); };
   const openEdit = (u) => { setEditUser(u); setForm({ name:u.name, email:u.email, phone:u.phone||'', password:'', role_ids:[], is_active:u.is_active }); setError(''); setDialog(true); };
+
+  const handleDelete = async (id) => {
+    try {
+      await api.delete(`/v2/masters/users/${id}`);
+      setDeleteConfirm(null); load();
+    } catch(e) { alert(e.response?.data?.error?.message || 'Cannot delete user'); }
+  };
 
   const handleSave = async () => {
     setSaving(true); setError('');
@@ -242,7 +250,10 @@ function UsersTab() {
                   </Box>
                   <Box sx={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:0.5 }}>
                     <Chip label={u.is_active?'Active':'Inactive'} color={u.is_active?'success':'default'} size="small"/>
-                    <IconButton size="small" onClick={() => openEdit(u)}><Edit fontSize="small"/></IconButton>
+                    <Box sx={{ display:'flex' }}>
+                      <IconButton size="small" onClick={() => openEdit(u)}><Edit fontSize="small"/></IconButton>
+                      <IconButton size="small" color="error" onClick={() => setDeleteConfirm(u)}><Delete fontSize="small"/></IconButton>
+                    </Box>
                   </Box>
                 </Box>
               </CardContent>
@@ -262,7 +273,10 @@ function UsersTab() {
                     <TableCell>{(u.roles||[]).map((r) => <Chip key={r} label={r} size="small" color={ROLE_COLORS[r]||'default'} sx={{ mr:0.5 }}/>)}</TableCell>
                     <TableCell sx={{ fontSize:12 }}>{u.last_login ? new Date(u.last_login).toLocaleDateString('en-IN') : 'Never'}</TableCell>
                     <TableCell><Chip label={u.is_active?'Active':'Inactive'} color={u.is_active?'success':'default'} size="small"/></TableCell>
-                    <TableCell align="center"><IconButton size="small" onClick={() => openEdit(u)}><Edit fontSize="small"/></IconButton></TableCell>
+                    <TableCell align="center">
+                      <IconButton size="small" onClick={() => openEdit(u)}><Edit fontSize="small"/></IconButton>
+                      <IconButton size="small" color="error" onClick={() => setDeleteConfirm(u)}><Delete fontSize="small"/></IconButton>
+                    </TableCell>
                   </TableRow>
                 ))}
             </TableBody>
@@ -315,6 +329,19 @@ function UsersTab() {
             sx={{ bgcolor:'#1B5E20' }}>
             {saving ? <CircularProgress size={20}/> : editUser ? 'Update User' : 'Create User'}
           </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Delete User Confirm */}
+      <Dialog open={Boolean(deleteConfirm)} onClose={() => setDeleteConfirm(null)} maxWidth="xs">
+        <DialogTitle>Delete User?</DialogTitle>
+        <DialogContent>
+          <Typography>Delete <strong>{deleteConfirm?.name}</strong> ({deleteConfirm?.email})?</Typography>
+          <Typography variant="body2" color="error" sx={{ mt:1 }}>This will permanently remove the user. This cannot be undone.</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteConfirm(null)}>Cancel</Button>
+          <Button color="error" variant="contained" onClick={() => handleDelete(deleteConfirm?.id)}>Delete User</Button>
         </DialogActions>
       </Dialog>
     </>

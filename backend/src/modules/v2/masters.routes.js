@@ -169,6 +169,19 @@ router.put('/users/:id', requirePermission('admin', 'can_edit'), async (req, res
   } catch(e) { await client.query('ROLLBACK'); throw e; } finally { client.release(); }
 });
 
+router.delete('/users/:id', requirePermission('admin', 'can_delete'), async (req, res) => {
+  const millId = req.user.millId;
+  // Prevent deleting yourself
+  if (String(req.params.id) === String(req.user.id)) {
+    return res.status(400).json({ success:false, error:{ code:'SELF_DELETE', message:'Cannot delete your own account' } });
+  }
+  const r = await query('SELECT id FROM users WHERE id=$1 AND mill_id=$2 AND deleted_at IS NULL', [req.params.id, millId]);
+  if (!r.rows[0]) return res.status(404).json({ success:false, error:{ code:'NOT_FOUND', message:'User not found' } });
+  await query('UPDATE users SET deleted_at=NOW(), updated_at=NOW() WHERE id=$1', [req.params.id]);
+  await recordAudit(null, { ...who(req), action:'DELETE', entityType:'user', entityId:Number(req.params.id) });
+  success(res, null, 'User deleted');
+});
+
 // ══ LEDGER PERMISSIONS ═══════════════════════════════════════
 
 router.get('/ledger-permissions/:userId', requirePermission('admin', 'can_view'), async (req, res) => {
