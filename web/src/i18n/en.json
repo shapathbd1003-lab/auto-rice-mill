@@ -1,5 +1,5 @@
 {
-  "app": { "name": "Auto Rice Mill", "tagline": "Rice Mill Management System" },
+  "app": { "name": "Mithila Auto Rice Mill", "tagline": "Rice Mill Management System" },
   "nav": {
     "dashboard": "Dashboard", "customers": "Customers", "suppliers": "Suppliers",
     "purchases": "Purchases", "production": "Production", "inventory": "Inventory",
