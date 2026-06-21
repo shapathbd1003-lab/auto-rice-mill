@@ -82,26 +82,23 @@ function NavItem({ item, level=0, onClose }) {
   const { user }  = useSelector((s) => s.auth);
   const [open, setOpen] = useState(false);
 
-  if (item.adminOnly && !user?.isAdmin) return null;
-
+  // ALL hooks must come before any conditional returns (React Rules of Hooks)
   const dbPerms = user?.permissions || {};
   const hasDbPerms = Object.keys(dbPerms).length > 0;
-
-  // Simple permission rule for non-admins:
-  // If DB permissions exist → show only items where module has can_view=true
-  // If no DB permissions → show nothing (user needs admin to grant permissions)
-  if (!user?.isAdmin) {
-    if (item.permModule) {
-      // Leaf item with a module — check DB permission
-      if (!hasDbPerms || !dbPerms[item.permModule]?.can_view) return null;
-    }
-  }
 
   const isActive = item.path
     ? location.pathname === item.path
     : item.children?.some((c) => location.pathname.startsWith(c.path));
 
   useEffect(() => { if (isActive && item.children) setOpen(true); }, [location.pathname]);
+
+  // Now safe to do conditional returns after all hooks
+  if (item.adminOnly && !user?.isAdmin) return null;
+
+  // Permission check for non-admins
+  if (!user?.isAdmin && item.permModule) {
+    if (!hasDbPerms || !dbPerms[item.permModule]?.can_view) return null;
+  }
 
   // Hide parent section if user has no access to any child
   if (item.children && !user?.isAdmin) {
