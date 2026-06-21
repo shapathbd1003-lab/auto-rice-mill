@@ -19,7 +19,7 @@ const DRAWER_WIDTH = 260;
 const NAV = [
   { label:'Dashboard', icon:<Dashboard/>, path:'/' },
   {
-    label:'Masters', icon:<AccountTree/>, children:[
+    label:'Masters', icon:<AccountTree/>, adminOnly:true, children:[
       { label:'Ledger Groups',   path:'/masters/ledger-groups' },
       { label:'Ledgers',         path:'/masters/ledgers' },
       { label:'Stock Groups',    path:'/masters/stock-groups' },

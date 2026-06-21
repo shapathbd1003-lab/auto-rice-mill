@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import {
   Box, Typography, Button, Paper, Table, TableBody, TableCell, TableHead,
   TableRow, IconButton, Dialog, DialogTitle, DialogContent, DialogActions,
@@ -23,6 +24,17 @@ export default function Masters() {
   const navigate  = useNavigate();
   const theme     = useTheme();
   const isMobile  = useMediaQuery(theme.breakpoints.down('sm'));
+  const { user }  = useSelector((s) => s.auth);
+
+  // Masters is admin-only — unless user has permission granted
+  if (!user?.isAdmin) {
+    return (
+      <Box sx={{ p:3, textAlign:'center' }}>
+        <Alert severity="error">Access denied. Masters configuration requires Administrator role.</Alert>
+        <Button sx={{ mt:2 }} onClick={() => navigate('/')}>Go to Dashboard</Button>
+      </Box>
+    );
+  }
 
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -40,6 +52,7 @@ export default function Masters() {
     setLoading(true);
     api.get(master.apiPath, { params:{ limit:500 } })
       .then((r) => setRows(r.data.data || []))
+      .catch((e) => setError(e.response?.data?.error?.message || 'Failed to load'))
       .finally(() => setLoading(false));
   }, [type]);
 
@@ -72,7 +85,12 @@ export default function Masters() {
   const openAdd = () => { setEditRow(null); setForm({}); setError(''); setDialog(true); };
   const openEdit = (row) => {
     setEditRow(row);
-    setForm({ name: row.name, abbreviation: row.abbreviation, prefix: row.prefix, nature: row.nature, parent_id: row.parent_id });
+    // Use only fields valid for each master type
+    if (type === 'ledgers') {
+      setForm({ name: row.name, name_bn: row.name_bn || '', code: row.code || '', notes: row.notes || '', is_active: row.is_active });
+    } else {
+      setForm({ name: row.name, abbreviation: row.abbreviation, prefix: row.prefix, nature: row.nature, parent_id: row.parent_id });
+    }
     setError(''); setDialog(true);
   };
 
@@ -169,7 +187,7 @@ export default function Masters() {
                     ))}
                     <TableCell align="center">
                       <IconButton size="small" onClick={() => openEdit(row)}><Edit fontSize="small"/></IconButton>
-                      {!row.is_system && <IconButton size="small" color="error" onClick={() => setDeleteConfirm(row)}><Delete fontSize="small"/></IconButton>}
+                      <IconButton size="small" color="error" onClick={() => setDeleteConfirm(row)}><Delete fontSize="small"/></IconButton>
                     </TableCell>
                   </TableRow>
                 ))}
