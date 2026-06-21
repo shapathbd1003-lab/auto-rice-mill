@@ -1,6 +1,7 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import { Box, Typography, Button, Paper } from '@mui/material';
 
 // V2 pages
 import Login from './pages/Login/Login';
@@ -25,36 +26,52 @@ function RequireAuth({ children }) {
   return isAuthenticated ? children : <Navigate to="/login" replace />;
 }
 
+// Error boundary to catch crashes and show message instead of blank page
+class ErrorBoundary extends React.Component {
+  constructor(props) { super(props); this.state = { error: null }; }
+  static getDerivedStateFromError(error) { return { error }; }
+  render() {
+    if (this.state.error) {
+      return (
+        <Box sx={{ p:3, display:'flex', justifyContent:'center', mt:6 }}>
+          <Paper sx={{ p:4, maxWidth:500, textAlign:'center' }}>
+            <Typography variant="h6" color="error" sx={{ mb:2 }}>Something went wrong</Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb:2, fontFamily:'monospace', fontSize:11 }}>
+              {this.state.error?.message}
+            </Typography>
+            <Button variant="contained" onClick={() => { this.setState({ error:null }); window.location.replace(window.location.pathname + '#/'); }}>
+              Go to Dashboard
+            </Button>
+          </Paper>
+        </Box>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export default function App() {
   return (
-    <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route path="/" element={<RequireAuth><AppLayoutV2 /></RequireAuth>}>
-        <Route index element={<Dashboard />} />
-
-        {/* Masters */}
-        <Route path="masters"      element={<Masters />} />
-        <Route path="masters/:type" element={<Masters />} />
-
-        {/* Vouchers — all types */}
-        <Route path="vouchers"              element={<VoucherEntry />} />
-        <Route path="vouchers/:type"        element={<VoucherEntry />} />
-
-        {/* Reports */}
-        <Route path="reports"       element={<ReportsPage />} />
-        <Route path="reports/:type" element={<ReportsPage />} />
-
-        {/* Administration */}
-        <Route path="admin"           element={<Admin />} />
-        <Route path="admin/:section"  element={<Admin />} />
-
-        {/* Mill Operations (kept from v1) */}
-        <Route path="inventory/*"  element={<Inventory />} />
-        <Route path="production/*" element={<Production />} />
-        <Route path="employees/*"  element={<Employees />} />
-        <Route path="vehicles/*"   element={<Vehicles />} />
-        <Route path="notifications" element={<Notifications />} />
-      </Route>
-    </Routes>
+    <ErrorBoundary>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/" element={<RequireAuth><AppLayoutV2 /></RequireAuth>}>
+          <Route index element={<ErrorBoundary><Dashboard /></ErrorBoundary>} />
+          <Route path="masters"       element={<ErrorBoundary><Masters /></ErrorBoundary>} />
+          <Route path="masters/:type" element={<ErrorBoundary><Masters /></ErrorBoundary>} />
+          <Route path="vouchers"              element={<ErrorBoundary><VoucherEntry /></ErrorBoundary>} />
+          <Route path="vouchers/:type"        element={<ErrorBoundary><VoucherEntry /></ErrorBoundary>} />
+          <Route path="reports"       element={<ErrorBoundary><ReportsPage /></ErrorBoundary>} />
+          <Route path="reports/:type" element={<ErrorBoundary><ReportsPage /></ErrorBoundary>} />
+          <Route path="admin"           element={<ErrorBoundary><Admin /></ErrorBoundary>} />
+          <Route path="admin/:section"  element={<ErrorBoundary><Admin /></ErrorBoundary>} />
+          <Route path="inventory/*"  element={<Inventory />} />
+          <Route path="production/*" element={<Production />} />
+          <Route path="employees/*"  element={<Employees />} />
+          <Route path="vehicles/*"   element={<Vehicles />} />
+          <Route path="notifications" element={<Notifications />} />
+        </Route>
+      </Routes>
+    </ErrorBoundary>
   );
 }
