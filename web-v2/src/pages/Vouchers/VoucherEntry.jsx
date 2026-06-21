@@ -223,18 +223,6 @@ export default function VoucherEntry() {
         <>
           <Box sx={{ display:'flex', gap:1, mb:2, flexWrap:'wrap' }}>
             <TextField size="small" label="From" type="date" value={filter.from}
-<<<<<<< HEAD
-              onChange={(e) => setFilter({...filter,from:e.target.value})} InputLabelProps={{ shrink:true }} sx={{ width:160 }}/>
-            <TextField size="small" label="To" type="date" value={filter.to}
-              onChange={(e) => setFilter({...filter,to:e.target.value})} InputLabelProps={{ shrink:true }} sx={{ width:160 }}/>
-          </Box>
-          <Paper>
-            <Table size="small">
-              <TableHead>
-                <TableRow sx={{ bgcolor:'grey.100' }}>
-                  <TableCell>Date</TableCell>
-                  <TableCell>Voucher No.</TableCell>
-=======
               onChange={(e) => setFilter({...filter,from:e.target.value})} InputLabelProps={{ shrink:true }} sx={{ width:{ xs:'100%', sm:160 } }}/>
             <TextField size="small" label="To" type="date" value={filter.to}
               onChange={(e) => setFilter({...filter,to:e.target.value})} InputLabelProps={{ shrink:true }} sx={{ width:{ xs:'100%', sm:160 } }}/>
@@ -245,7 +233,6 @@ export default function VoucherEntry() {
                 <TableRow sx={{ bgcolor:'grey.100' }}>
                   <TableCell sx={{ whiteSpace:'nowrap' }}>Date</TableCell>
                   <TableCell sx={{ whiteSpace:'nowrap' }}>Voucher No.</TableCell>
->>>>>>> master
                   <TableCell>Type</TableCell>
                   <TableCell>Narration</TableCell>
                   <TableCell align="right">Amount</TableCell>
