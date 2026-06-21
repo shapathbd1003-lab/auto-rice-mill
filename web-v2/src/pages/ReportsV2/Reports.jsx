@@ -55,13 +55,29 @@ export default function ReportsPage() {
     <Box>
       <Typography variant="h5" fontWeight="bold" sx={{ mb:3 }}>Accounting & Mill Reports</Typography>
 
-      {/* Date controls */}
-      <Box sx={{ display:'flex', gap:1, mb:3, flexWrap:'wrap', alignItems:'center' }}>
-        <TextField size="small" label="From" type="date" value={from} onChange={(e) => setFrom(e.target.value)} InputLabelProps={{ shrink:true }} sx={{ width:160 }}/>
-        <TextField size="small" label="To" type="date" value={to} onChange={(e) => setTo(e.target.value)} InputLabelProps={{ shrink:true }} sx={{ width:160 }}/>
-        <TextField size="small" label="As of Date" type="date" value={asOf} onChange={(e) => setAsOf(e.target.value)} InputLabelProps={{ shrink:true }} sx={{ width:170 }}/>
-        <TextField size="small" label="Date (Day Book)" type="date" value={date} onChange={(e) => setDate(e.target.value)} InputLabelProps={{ shrink:true }} sx={{ width:200 }}/>
-      </Box>
+      {/* Date controls — responsive */}
+      <Grid container spacing={1} sx={{ mb:3 }}>
+        <Grid item xs={6} sm="auto">
+          <TextField fullWidth size="small" label="From" type="date" value={from}
+            onChange={(e) => setFrom(e.target.value)} InputLabelProps={{ shrink:true }}
+            sx={{ width:{ xs:'100%', sm:160 } }}/>
+        </Grid>
+        <Grid item xs={6} sm="auto">
+          <TextField fullWidth size="small" label="To" type="date" value={to}
+            onChange={(e) => { if (e.target.value < from) { setError('To date must be after From date'); return; } setTo(e.target.value); setError(''); }}
+            InputLabelProps={{ shrink:true }} sx={{ width:{ xs:'100%', sm:160 } }}/>
+        </Grid>
+        <Grid item xs={6} sm="auto">
+          <TextField fullWidth size="small" label="As of Date" type="date" value={asOf}
+            onChange={(e) => setAsOf(e.target.value)} InputLabelProps={{ shrink:true }}
+            sx={{ width:{ xs:'100%', sm:170 } }}/>
+        </Grid>
+        <Grid item xs={6} sm="auto">
+          <TextField fullWidth size="small" label="Day Book Date" type="date" value={date}
+            onChange={(e) => setDate(e.target.value)} InputLabelProps={{ shrink:true }}
+            sx={{ width:{ xs:'100%', sm:180 } }}/>
+        </Grid>
+      </Grid>
 
       {/* Report cards */}
       <Grid container spacing={2} sx={{ mb:4 }}>
@@ -117,20 +133,49 @@ export default function ReportsPage() {
       {/* P&L */}
       {data && selected?.key==='profit-loss' && (
         <Grid container spacing={2}>
-          {[['Expenses', data.expenses, 'error', 'dr', 'cr'], ['Income', data.income, 'success', 'cr', 'dr']].map(([title, rows, color, posCol, negCol]) => (
+          {[
+            { title:'Income',   rows:data.income,   color:'success', getValue:(r) => Math.abs(Number(r.cr)-Number(r.dr)), total:data.totalIncome },
+            { title:'Expenses', rows:data.expenses, color:'error',   getValue:(r) => Math.abs(Number(r.dr)-Number(r.cr)), total:data.totalExpenses },
+          ].map(({ title, rows, color, getValue, total }) => (
             <Grid item xs={12} md={6} key={title}>
               <Paper>
-                <Box sx={{ p:2, bgcolor:`${color}.main`, color:'white' }}><Typography fontWeight="bold">{title}</Typography></Box>
+                <Box sx={{ p:2, bgcolor:`${color}.main`, color:'white' }}>
+                  <Typography fontWeight="bold">{title}</Typography>
+                </Box>
                 <Table size="small">
+                  <TableHead>
+                    <TableRow sx={{ bgcolor:'grey.50' }}>
+                      <TableCell>Ledger</TableCell>
+                      <TableCell sx={{ color:'text.secondary', fontSize:12 }}>Group</TableCell>
+                      <TableCell align="right">Amount</TableCell>
+                    </TableRow>
+                  </TableHead>
                   <TableBody>
-                    {(rows||[]).map((r,i) => <TableRow key={i} hover><TableCell>{r.ledger_name}</TableCell><TableCell sx={{ color:'text.secondary', fontSize:12 }}>{r.group_name}</TableCell><TableCell align="right" sx={{ fontWeight:'bold', color:`${color}.main` }}>{fmt(Math.abs(Number(r[posCol])-Number(r[negCol])))}</TableCell></TableRow>)}
-                    <TableRow sx={{ bgcolor:'grey.100' }}><TableCell colSpan={2} sx={{ fontWeight:'bold' }}>Total {title}</TableCell><TableCell align="right" sx={{ fontWeight:'bold', color:`${color}.main` }}>{fmt(title==='Income'?data.totalIncome:data.totalExpenses)}</TableCell></TableRow>
-                    {title==='Expenses' && <TableRow sx={{ bgcolor:data.netProfit>=0?'success.50':'error.50' }}><TableCell colSpan={2} sx={{ fontWeight:'bold' }}>{data.netProfit>=0?'Net Profit':'Net Loss'}</TableCell><TableCell align="right" sx={{ fontWeight:'bold', color:data.netProfit>=0?'success.main':'error.main' }}>{fmt(Math.abs(data.netProfit))}</TableCell></TableRow>}
+                    {(rows||[]).length === 0
+                      ? <TableRow><TableCell colSpan={3} align="center" sx={{ color:'text.secondary' }}>No {title.toLowerCase()} entries</TableCell></TableRow>
+                      : (rows||[]).map((r, i) => (
+                        <TableRow key={i} hover>
+                          <TableCell>{r.ledger_name}</TableCell>
+                          <TableCell sx={{ color:'text.secondary', fontSize:12 }}>{r.group_name}</TableCell>
+                          <TableCell align="right" sx={{ fontWeight:'bold', color:`${color}.main` }}>{fmt(getValue(r))}</TableCell>
+                        </TableRow>
+                      ))}
+                    <TableRow sx={{ bgcolor:'grey.100' }}>
+                      <TableCell colSpan={2} sx={{ fontWeight:'bold' }}>Total {title}</TableCell>
+                      <TableCell align="right" sx={{ fontWeight:'bold', color:`${color}.main` }}>{fmt(total)}</TableCell>
+                    </TableRow>
                   </TableBody>
                 </Table>
               </Paper>
             </Grid>
           ))}
+          {/* Net Profit/Loss row */}
+          <Grid item xs={12}>
+            <Paper sx={{ p:2, bgcolor: data.netProfit >= 0 ? 'success.50' : 'error.50', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+              <Typography variant="h6" fontWeight="bold">{data.netProfit >= 0 ? 'Net Profit' : 'Net Loss'}</Typography>
+              <Typography variant="h6" fontWeight="bold" color={data.netProfit >= 0 ? 'success.main' : 'error.main'}>{fmt(Math.abs(data.netProfit))}</Typography>
+            </Paper>
+          </Grid>
         </Grid>
       )}
 

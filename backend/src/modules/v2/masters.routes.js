@@ -153,13 +153,23 @@ router.put('/users/:id', requirePermission('admin', 'can_edit'), async (req, res
   const client = await getClient();
   try {
     await client.query('BEGIN');
-    const sets = ['updated_at=NOW()']; const params = [];
-    if (name)      { sets.push(`name=$${params.length+1}`);     params.push(name); }
-    if (phone)     { sets.push(`phone=$${params.length+1}`);    params.push(phone); }
-    if (is_active !== undefined) { sets.push(`is_active=$${params.length+1}`); params.push(is_active); }
-    if (password)  { const h = await bcrypt.hash(password, 10); sets.push(`password_hash=$${params.length+1}`); params.push(h); }
-    params.push(req.params.id, req.user.millId);
-    if (sets.length > 1) await client.query(`UPDATE users SET ${sets.join(',')} WHERE id=$${params.length-1} AND mill_id=$${params.length}`, params);
+    // Build params first, then build SET clause with correct indices
+    const updateFields = [];
+    const params = [];
+    if (name !== undefined)      { params.push(name);     updateFields.push(`name=$${params.length}`); }
+    if (phone !== undefined)     { params.push(phone);    updateFields.push(`phone=$${params.length}`); }
+    if (is_active !== undefined) { params.push(is_active);updateFields.push(`is_active=$${params.length}`); }
+    if (password) {
+      const h = await bcrypt.hash(password, 10);
+      params.push(h); updateFields.push(`password_hash=$${params.length}`);
+    }
+    if (updateFields.length > 0) {
+      params.push(req.params.id, req.user.millId);
+      await client.query(
+        `UPDATE users SET ${updateFields.join(',')}, updated_at=NOW() WHERE id=$${params.length-1} AND mill_id=$${params.length}`,
+        params
+      );
+    }
     if (role_ids) {
       await client.query('DELETE FROM user_roles WHERE user_id=$1', [req.params.id]);
       for (const r of role_ids) await client.query('INSERT INTO user_roles (user_id,role_id) VALUES ($1,$2) ON CONFLICT DO NOTHING', [req.params.id, r]);

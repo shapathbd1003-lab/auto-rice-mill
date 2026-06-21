@@ -40,13 +40,12 @@ router.post('/login', validate(Joi.object({
 
   // Fetch roles separately to avoid JOIN duplication
   const rolesResult = await query(
-    `SELECT DISTINCT ro.name, bool_or(ro.name='Administrator') OVER() AS is_admin
-     FROM user_roles ur JOIN roles ro ON ro.id=ur.role_id
-     WHERE ur.user_id=$1 ORDER BY ro.name`,
+    `SELECT ro.name FROM user_roles ur JOIN roles ro ON ro.id=ur.role_id
+     WHERE ur.user_id=$1 GROUP BY ro.name ORDER BY ro.name`,
     [user.id]
   );
   const roleNames = rolesResult.rows.map((r) => r.name);
-  const isAdmin   = rolesResult.rows.some((r) => r.name === 'Administrator');
+  const isAdmin   = roleNames.includes('Administrator');
 
   const payload = {
     id:      user.id,
@@ -96,7 +95,7 @@ router.post('/refresh', async (req, res) => {
   await query('DELETE FROM refresh_tokens WHERE token=$1', [refreshToken]);
   // Fetch roles separately
   const refreshRoles = await query(
-    `SELECT DISTINCT ro.name FROM user_roles ur JOIN roles ro ON ro.id=ur.role_id WHERE ur.user_id=$1 ORDER BY ro.name`,
+    `SELECT ro.name FROM user_roles ur JOIN roles ro ON ro.id=ur.role_id WHERE ur.user_id=$1 GROUP BY ro.name ORDER BY ro.name`,
     [row.uid]
   );
   const refreshRoleNames = refreshRoles.rows.map((r) => r.name);
