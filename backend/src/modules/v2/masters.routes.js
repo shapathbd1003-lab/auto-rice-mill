@@ -135,7 +135,7 @@ router.post('/users', requirePermission('admin', 'can_create'), validate(Joi.obj
     await client.query('BEGIN');
     const r = await client.query(
       `INSERT INTO users (mill_id, name, email, phone, password_hash, role)
-       VALUES ($1,$2,$3,$4,$5,'sales') RETURNING id, name, email`,
+       VALUES ($1,$2,$3,$4,$5,'accountant') RETURNING id, name, email`,
       [millId, name, email, phone, hash]
     );
     const user = r.rows[0];

@@ -24,7 +24,12 @@ export default function Login() {
       dispatch(setCredentials(data.data));
       navigate('/');
     } catch (err) {
-      setError(err.response?.data?.error?.message || 'Login failed');
+      setError(
+        err.response?.data?.error?.message ||
+        err.response?.data?.message ||
+        err.message ||
+        'Login failed'
+      );
     } finally { setLoading(false); }
   };
 

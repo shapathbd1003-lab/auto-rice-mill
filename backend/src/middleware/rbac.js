@@ -52,8 +52,8 @@ function requirePermission(module, action = 'can_view') {
     try {
       if (!req.user) throw new AppError('Authentication required', 401, 'UNAUTHORIZED');
 
-      // Admin bypass (role === 'admin' kept for backward compat)
-      if (req.user.role === 'admin' || req.user.isAdmin) return next();
+      // Admin bypass — use isAdmin flag (single source of truth from JWT)
+      if (req.user.isAdmin === true) return next();
 
       const perms = await loadUserPermissions(req.user.id, req.user.millId);
       req.user.permissions = perms;
@@ -75,8 +75,16 @@ async function filterLedgerAccess(req, ledgerIds) {
   const perms = req.user.permissions || await loadUserPermissions(req.user.id, req.user.millId);
   const allowedLedgers = Object.keys(perms.ledgers).map(Number);
 
-  // If no ledger permissions set, user sees all (open access)
-  if (allowedLedgers.length === 0) return ledgerIds;
+  // If admin has explicitly set ledger permissions, enforce them
+  // If NO permissions set at all, assume open access (admin hasn't restricted yet)
+  // This allows gradual rollout — restrict only when admin explicitly configures
+  const totalPermissions = await query(
+    'SELECT COUNT(*) AS cnt FROM ledger_permissions WHERE mill_id=$1',
+    [millId || req?.user?.millId]
+  ).catch(() => ({ rows: [{ cnt: 0 }] }));
+  const permissionsConfigured = parseInt(totalPermissions.rows[0]?.cnt || 0) > 0;
+  if (!permissionsConfigured) return ledgerIds; // No restrictions configured yet
+  if (allowedLedgers.length === 0) return []; // Restrictions exist but user has none — deny all
 
   return ledgerIds.filter((id) => allowedLedgers.includes(Number(id)));
 }
@@ -85,12 +93,10 @@ async function filterLedgerAccess(req, ledgerIds) {
 async function attachPermissions(req, _res, next) {
   try {
     if (req.user && !req.user.permissions) {
-      if (req.user.role !== 'admin') {
+      if (!req.user.isAdmin) {
         req.user.permissions = await loadUserPermissions(req.user.id, req.user.millId);
-        req.user.isAdmin = false;
-      } else {
-        req.user.isAdmin = true;
       }
+      // isAdmin already set from JWT — no override needed
     }
     next();
   } catch { next(); }

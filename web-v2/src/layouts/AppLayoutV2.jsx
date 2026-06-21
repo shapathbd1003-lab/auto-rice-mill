@@ -158,11 +158,12 @@ export default function AppLayoutV2() {
             name:    me.name,
             email:   me.email,
             roles:   me.roles || [],
-            isAdmin: me.roles?.includes('Administrator') || false,
+            // isAdmin = true only if user has Administrator role in DB
+            isAdmin: Array.isArray(me.roles) && me.roles.includes('Administrator'),
           }));
         }
       })
-      .catch(() => {}); // silently fail — use cached data
+      .catch(() => {}); // silently ignore — use cached JWT data
   }, [dispatch]);
 
   const handleLogout = async () => {

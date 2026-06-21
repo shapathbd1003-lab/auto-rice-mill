@@ -93,11 +93,32 @@ router.post('/refresh', async (req, res) => {
   const row = r.rows[0];
   if (!row) throw new AppError('Invalid refresh token', 401, 'UNAUTHORIZED');
   await query('DELETE FROM refresh_tokens WHERE token=$1', [refreshToken]);
-  const payload = { id:row.uid, millId:row.mill_id, role:row.is_admin?'admin':'staff', email:row.email, isAdmin:row.is_admin };
+  // Include roles in JWT so frontend stays in sync after refresh
+  const payload = {
+    id:      row.uid,
+    millId:  row.mill_id,
+    role:    row.is_admin ? 'admin' : 'staff',
+    email:   row.email,
+    isAdmin: row.is_admin,
+    roles:   row.role_names || [],
+  };
   const newToken = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '15m' });
   const newRefresh = uuidv4();
   await query('INSERT INTO refresh_tokens (user_id,token,expires_at) VALUES ($1,$2,$3)', [row.uid, newRefresh, new Date(Date.now()+7*24*60*60*1000)]);
-  success(res, { token: newToken, refreshToken: newRefresh });
+  // Fetch user name for response
+  const userInfo = await query('SELECT name, mill_id FROM users WHERE id=$1', [row.uid]);
+  success(res, {
+    token: newToken,
+    refreshToken: newRefresh,
+    user: {
+      id:      row.uid,
+      email:   row.email,
+      name:    userInfo.rows[0]?.name || '',
+      millId:  row.mill_id,
+      roles:   row.role_names || [],
+      isAdmin: row.is_admin,
+    },
+  });
 });
 
 // POST /api/v2/auth/logout

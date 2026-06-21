@@ -47,7 +47,8 @@ async function postToLedger(client, millId, voucherId, viId, ledgerId, entryType
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
     [millId, ledgerId, voucherId, viId, date, entryType, amount, newBal]
   );
-  await client.query('UPDATE ledgers SET current_balance=$1, updated_at=NOW() WHERE id=$2', [Math.abs(newBal), ledgerId]);
+  // Store signed balance — positive = Dr balance, negative = Cr balance
+  await client.query('UPDATE ledgers SET current_balance=$1, updated_at=NOW() WHERE id=$2', [newBal, ledgerId]);
   return newBal;
 }
 
