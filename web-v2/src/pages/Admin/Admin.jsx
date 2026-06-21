@@ -1,0 +1,280 @@
+import React, { useEffect, useState, useCallback } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import {
+  Box, Typography, Button, Paper, Table, TableBody, TableCell, TableHead,
+  TableRow, Chip, IconButton, Dialog, DialogTitle, DialogContent, DialogActions,
+  Grid, TextField, CircularProgress, Alert, Select, MenuItem, FormControl, InputLabel,
+  Card, CardContent, CardActionArea, Tabs, Tab, Checkbox, FormControlLabel,
+} from '@mui/material';
+import { Add, Edit, Delete, Security, People, AccountTree, History } from '@mui/icons-material';
+import api from '../../services/api';
+
+const MODULES = ['masters','vouchers','reports','admin','purchase','sales','production','inventory','accounting','employees','banking'];
+const ROLE_COLORS = { Administrator:'error', Manager:'warning', 'Chief Accountant':'primary', 'Junior Accountant':'info', Cashier:'success', 'Store Keeper':'secondary', 'Sales Executive':'success', 'Production Operator':'default', Auditor:'default' };
+
+function RolesTab() {
+  const [roles, setRoles] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [dialog, setDialog] = useState(false);
+  const [form, setForm] = useState({ name:'', description:'', permissions:{} });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  const load = () => { setLoading(true); api.get('/v2/masters/roles').then((r) => setRoles(r.data.data||[])).finally(() => setLoading(false)); };
+  useEffect(() => { load(); }, []);
+
+  const togglePerm = (module, action) => {
+    const perms = { ...form.permissions };
+    if (!perms[module]) perms[module] = { can_view:false, can_create:false, can_edit:false, can_delete:false, can_approve:false };
+    perms[module][action] = !perms[module][action];
+    setForm({ ...form, permissions: perms });
+  };
+
+  const handleSave = async () => {
+    setSaving(true); setError('');
+    try {
+      const permissions = MODULES.map((m) => ({ module:m, ...(form.permissions[m]||{ can_view:false, can_create:false, can_edit:false, can_delete:false, can_approve:false }) }));
+      await api.post('/v2/masters/roles', { name:form.name, description:form.description, permissions });
+      setDialog(false); setForm({ name:'', description:'', permissions:{} }); load();
+    } catch(e) { setError(e.response?.data?.error?.message||'Failed'); }
+    finally { setSaving(false); }
+  };
+
+  return (
+    <>
+      <Box sx={{ display:'flex', justifyContent:'flex-end', mb:2 }}>
+        <Button variant="contained" startIcon={<Add/>} onClick={() => { setForm({ name:'', description:'', permissions:{} }); setError(''); setDialog(true); }} sx={{ bgcolor:'#1B5E20' }}>
+          Create Role
+        </Button>
+      </Box>
+      <Paper>
+        <Table size="small">
+          <TableHead><TableRow sx={{ bgcolor:'grey.100' }}><TableCell>Role Name</TableCell><TableCell>Description</TableCell><TableCell>Users</TableCell><TableCell>System</TableCell><TableCell align="center">Actions</TableCell></TableRow></TableHead>
+          <TableBody>
+            {loading ? <TableRow><TableCell colSpan={5} align="center"><CircularProgress size={24}/></TableCell></TableRow>
+              : roles.map((r) => (
+                <TableRow key={r.id} hover>
+                  <TableCell><Chip label={r.name} color={ROLE_COLORS[r.name]||'default'} size="small"/></TableCell>
+                  <TableCell sx={{ color:'text.secondary', fontSize:12 }}>{r.description}</TableCell>
+                  <TableCell><Chip label={`${r.user_count} users`} size="small" variant="outlined"/></TableCell>
+                  <TableCell>{r.is_system ? <Chip label="System" size="small"/> : '—'}</TableCell>
+                  <TableCell align="center">
+                    {!r.is_system && <><IconButton size="small"><Edit fontSize="small"/></IconButton><IconButton size="small" color="error"><Delete fontSize="small"/></IconButton></>}
+                  </TableCell>
+                </TableRow>
+              ))}
+          </TableBody>
+        </Table>
+      </Paper>
+
+      <Dialog open={dialog} onClose={() => setDialog(false)} maxWidth="md" fullWidth>
+        <DialogTitle>Create New Role</DialogTitle>
+        <DialogContent>
+          {error && <Alert severity="error" sx={{ mb:2 }}>{error}</Alert>}
+          <Grid container spacing={2} sx={{ mt:0 }}>
+            <Grid item xs={6}><TextField fullWidth size="small" label="Role Name *" value={form.name} onChange={(e) => setForm({...form,name:e.target.value})} autoFocus/></Grid>
+            <Grid item xs={6}><TextField fullWidth size="small" label="Description" value={form.description} onChange={(e) => setForm({...form,description:e.target.value})}/></Grid>
+          </Grid>
+          <Typography variant="subtitle2" sx={{ mt:2, mb:1 }}>Module Permissions</Typography>
+          <Paper variant="outlined" sx={{ overflowX:'auto' }}>
+            <Table size="small">
+              <TableHead><TableRow sx={{ bgcolor:'grey.50' }}><TableCell>Module</TableCell><TableCell align="center">View</TableCell><TableCell align="center">Create</TableCell><TableCell align="center">Edit</TableCell><TableCell align="center">Delete</TableCell><TableCell align="center">Approve</TableCell></TableRow></TableHead>
+              <TableBody>
+                {MODULES.map((m) => {
+                  const p = form.permissions[m]||{};
+                  return (
+                    <TableRow key={m} hover>
+                      <TableCell sx={{ textTransform:'capitalize', fontWeight:'medium' }}>{m}</TableCell>
+                      {['can_view','can_create','can_edit','can_delete','can_approve'].map((a) => (
+                        <TableCell key={a} align="center">
+                          <Checkbox size="small" checked={!!p[a]} onChange={() => togglePerm(m,a)} sx={{ color:'#1B5E20', '&.Mui-checked':{ color:'#1B5E20' } }}/>
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </Paper>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDialog(false)}>Cancel</Button>
+          <Button variant="contained" onClick={handleSave} disabled={saving||!form.name} sx={{ bgcolor:'#1B5E20' }}>
+            {saving ? <CircularProgress size={20}/> : 'Create Role'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
+  );
+}
+
+function UsersTab() {
+  const [users, setUsers] = useState([]);
+  const [roles, setRoles] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [dialog, setDialog] = useState(false);
+  const [form, setForm] = useState({ name:'', email:'', phone:'', password:'', role_ids:[] });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  const load = () => {
+    setLoading(true);
+    Promise.all([
+      api.get('/v2/masters/users'),
+      api.get('/v2/masters/roles'),
+    ]).then(([u,r]) => { setUsers(u.data.data||[]); setRoles(r.data.data||[]); }).finally(() => setLoading(false));
+  };
+  useEffect(() => { load(); }, []);
+
+  const handleSave = async () => {
+    setSaving(true); setError('');
+    try {
+      await api.post('/v2/masters/users', form);
+      setDialog(false); setForm({ name:'', email:'', phone:'', password:'', role_ids:[] }); load();
+    } catch(e) { setError(e.response?.data?.error?.message||'Failed'); }
+    finally { setSaving(false); }
+  };
+
+  return (
+    <>
+      <Box sx={{ display:'flex', justifyContent:'flex-end', mb:2 }}>
+        <Button variant="contained" startIcon={<Add/>} onClick={() => { setForm({ name:'', email:'', phone:'', password:'', role_ids:[] }); setError(''); setDialog(true); }} sx={{ bgcolor:'#1B5E20' }}>Add User</Button>
+      </Box>
+      <Paper>
+        <Table size="small">
+          <TableHead><TableRow sx={{ bgcolor:'grey.100' }}><TableCell>Name</TableCell><TableCell>Email</TableCell><TableCell>Roles</TableCell><TableCell>Last Login</TableCell><TableCell>Status</TableCell><TableCell align="center">Actions</TableCell></TableRow></TableHead>
+          <TableBody>
+            {loading ? <TableRow><TableCell colSpan={6} align="center"><CircularProgress size={24}/></TableCell></TableRow>
+              : users.map((u) => (
+                <TableRow key={u.id} hover>
+                  <TableCell sx={{ fontWeight:'bold' }}>{u.name}</TableCell>
+                  <TableCell>{u.email}</TableCell>
+                  <TableCell>{(u.roles||[]).map((r) => <Chip key={r} label={r} size="small" color={ROLE_COLORS[r]||'default'} sx={{ mr:0.5 }}/>)}</TableCell>
+                  <TableCell sx={{ fontSize:12 }}>{u.last_login ? new Date(u.last_login).toLocaleDateString('en-IN') : 'Never'}</TableCell>
+                  <TableCell><Chip label={u.is_active?'Active':'Inactive'} color={u.is_active?'success':'default'} size="small"/></TableCell>
+                  <TableCell align="center"><IconButton size="small"><Edit fontSize="small"/></IconButton></TableCell>
+                </TableRow>
+              ))}
+          </TableBody>
+        </Table>
+      </Paper>
+
+      <Dialog open={dialog} onClose={() => setDialog(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Add New User</DialogTitle>
+        <DialogContent>
+          {error && <Alert severity="error" sx={{ mb:2 }}>{error}</Alert>}
+          <Grid container spacing={2} sx={{ mt:0 }}>
+            <Grid item xs={6}><TextField fullWidth size="small" label="Full Name *" value={form.name} onChange={(e) => setForm({...form,name:e.target.value})} autoFocus/></Grid>
+            <Grid item xs={6}><TextField fullWidth size="small" label="Email *" value={form.email} onChange={(e) => setForm({...form,email:e.target.value})}/></Grid>
+            <Grid item xs={6}><TextField fullWidth size="small" label="Phone" value={form.phone} onChange={(e) => setForm({...form,phone:e.target.value})}/></Grid>
+            <Grid item xs={6}><TextField fullWidth size="small" label="Password *" type="password" value={form.password} onChange={(e) => setForm({...form,password:e.target.value})}/></Grid>
+            <Grid item xs={12}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Assign Roles *</InputLabel>
+                <Select multiple value={form.role_ids} label="Assign Roles *"
+                  onChange={(e) => setForm({...form,role_ids:e.target.value})}
+                  renderValue={(sel) => roles.filter((r) => sel.includes(r.id)).map((r) => <Chip key={r.id} label={r.name} size="small" sx={{ mr:0.5 }}/>)}>
+                  {roles.map((r) => <MenuItem key={r.id} value={r.id}><Chip label={r.name} size="small" color={ROLE_COLORS[r.name]||'default'} sx={{ mr:1 }}/>{r.description}</MenuItem>)}
+                </Select>
+              </FormControl>
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDialog(false)}>Cancel</Button>
+          <Button variant="contained" onClick={handleSave} disabled={saving||!form.name||!form.email||!form.password||form.role_ids.length===0} sx={{ bgcolor:'#1B5E20' }}>
+            {saving ? <CircularProgress size={20}/> : 'Create User'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
+  );
+}
+
+function AuditTab() {
+  const [logs, setLogs] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [from, setFrom] = useState(new Date().toISOString().slice(0,10));
+
+  useEffect(() => {
+    setLoading(true);
+    api.get('/v2/masters/audit-trail', { params:{ from, limit:100 } })
+      .then((r) => setLogs(r.data.data||[]))
+      .finally(() => setLoading(false));
+  }, [from]);
+
+  const ACTION_COLORS = { CREATE:'success', UPDATE:'primary', DELETE:'error', LOGIN:'info', APPROVE:'success', CANCEL:'warning' };
+
+  return (
+    <>
+      <Box sx={{ mb:2 }}>
+        <TextField size="small" type="date" label="From Date" value={from} onChange={(e) => setFrom(e.target.value)} InputLabelProps={{ shrink:true }} sx={{ width:180 }}/>
+      </Box>
+      <Paper>
+        <Table size="small">
+          <TableHead><TableRow sx={{ bgcolor:'grey.100' }}><TableCell>Time</TableCell><TableCell>User</TableCell><TableCell>Action</TableCell><TableCell>Entity</TableCell><TableCell>Reference</TableCell></TableRow></TableHead>
+          <TableBody>
+            {loading ? <TableRow><TableCell colSpan={5} align="center"><CircularProgress size={24}/></TableCell></TableRow>
+              : logs.length===0 ? <TableRow><TableCell colSpan={5} align="center" sx={{ color:'text.secondary' }}>No audit logs</TableCell></TableRow>
+              : logs.map((l) => (
+                <TableRow key={l.id} hover>
+                  <TableCell sx={{ fontSize:12, whiteSpace:'nowrap' }}>{new Date(l.created_at).toLocaleString('en-IN')}</TableCell>
+                  <TableCell>{l.user_name}</TableCell>
+                  <TableCell><Chip label={l.action} color={ACTION_COLORS[l.action]||'default'} size="small"/></TableCell>
+                  <TableCell sx={{ textTransform:'capitalize' }}>{l.entity_type}</TableCell>
+                  <TableCell sx={{ fontSize:12 }}>{l.entity_ref||l.entity_id||'—'}</TableCell>
+                </TableRow>
+              ))}
+          </TableBody>
+        </Table>
+      </Paper>
+    </>
+  );
+}
+
+const ADMIN_SECTIONS = [
+  { key:'roles',       label:'Roles & Permissions', icon:<Security/>  },
+  { key:'users',       label:'Users',                icon:<People/>    },
+  { key:'audit-trail', label:'Audit Trail',          icon:<History/>   },
+];
+
+export default function Admin() {
+  const { section } = useParams();
+  const navigate = useNavigate();
+
+  if (!section) {
+    return (
+      <Box>
+        <Typography variant="h5" fontWeight="bold" sx={{ mb:3 }}>Administration</Typography>
+        <Grid container spacing={2}>
+          {ADMIN_SECTIONS.map((s) => (
+            <Grid item xs={12} sm={6} md={4} key={s.key}>
+              <Card>
+                <CardActionArea onClick={() => navigate(`/admin/${s.key}`)} sx={{ p:2 }}>
+                  <Box sx={{ display:'flex', alignItems:'center', gap:2 }}>
+                    <Box sx={{ color:'#1B5E20' }}>{s.icon}</Box>
+                    <Typography fontWeight="bold">{s.label}</Typography>
+                  </Box>
+                </CardActionArea>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+      </Box>
+    );
+  }
+
+  const sec = ADMIN_SECTIONS.find((s) => s.key===section);
+
+  return (
+    <Box>
+      <Box sx={{ mb:2 }}>
+        <Typography variant="body2" color="text.secondary" sx={{ cursor:'pointer' }} onClick={() => navigate('/admin')}>← Administration</Typography>
+        <Typography variant="h5" fontWeight="bold">{sec?.label||section}</Typography>
+      </Box>
+      {section==='roles'       && <RolesTab/>}
+      {section==='users'       && <UsersTab/>}
+      {section==='audit-trail' && <AuditTab/>}
+    </Box>
+  );
+}

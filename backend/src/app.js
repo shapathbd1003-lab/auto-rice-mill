@@ -26,6 +26,11 @@ const khataRoutes        = require('./modules/khata/khata.routes');
 const cashbookRoutes     = require('./modules/khata/cashbook.routes');
 const erpLedgerRoutes    = require('./modules/erp/ledgers.routes');
 const erpKhataRoutes     = require('./modules/erp/khata.routes');
+// V2 — Tally ERP 9 style
+const authV2Routes       = require('./modules/v2/auth-v2.routes');
+const mastersV2Routes    = require('./modules/v2/masters.routes');
+const vouchersV2Routes   = require('./modules/v2/vouchers-v2.routes');
+const reportsV2Routes    = require('./modules/v2/reports-v2.routes');
 const erpVoucherRoutes   = require('./modules/erp/vouchers.routes');
 const erpFYRoutes        = require('./modules/erp/financial-years.routes');
 const erpBankingRoutes   = require('./modules/erp/banking.routes');
@@ -76,6 +81,11 @@ app.use('/api/khata',            khataRoutes);
 app.use('/api/khata/cashbook',   cashbookRoutes);
 app.use('/api/erp',              erpLedgerRoutes);
 app.use('/api/erp/khata',        erpKhataRoutes);
+// V2 API
+app.use('/api/v2/auth',          authV2Routes);
+app.use('/api/v2/masters',       mastersV2Routes);
+app.use('/api/v2/vouchers',      vouchersV2Routes);
+app.use('/api/v2/reports',       reportsV2Routes);
 app.use('/api/erp/vouchers',     erpVoucherRoutes);
 app.use('/api/erp/financial-years', erpFYRoutes);
 app.use('/api/erp/banking',      erpBankingRoutes);
