@@ -33,11 +33,12 @@ jobs:
         run: |
           cd web-v2
           npm install
-          ls -la
           VITE_API_URL=https://backend-production-1b9e.up.railway.app npx vite build
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
+        with:
+          enablement: true
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
