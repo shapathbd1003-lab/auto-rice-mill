@@ -126,7 +126,8 @@ router.post('/users', requirePermission('admin', 'can_create'), validate(Joi.obj
   password: Joi.string().min(4).required(),
   role_ids: Joi.array().items(Joi.number().integer()).min(1).required(),
 })), async (req, res) => {
-  const { name, email, username, phone, password, role_ids } = req.body;
+  const { name, username, phone, password, role_ids } = req.body;
+  const email = req.body.email?.toLowerCase().trim();
   const millId = req.user.millId;
   const hash = await bcrypt.hash(password, 10);
   const client = await getClient();

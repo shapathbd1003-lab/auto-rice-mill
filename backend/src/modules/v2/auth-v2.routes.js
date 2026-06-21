@@ -29,7 +29,7 @@ router.post('/login', validate(Joi.object({
      JOIN mills m ON m.id=u.mill_id
      LEFT JOIN user_roles ur ON ur.user_id=u.id
      LEFT JOIN roles r ON r.id=ur.role_id
-     WHERE (u.email=LOWER($1) OR u.phone=$1) AND u.deleted_at IS NULL AND u.is_active=TRUE
+     WHERE (LOWER(u.email)=LOWER($1) OR u.phone=$1) AND u.deleted_at IS NULL AND u.is_active=TRUE
      GROUP BY u.id, m.name`,
     [username]
   );
