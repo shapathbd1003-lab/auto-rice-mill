@@ -163,6 +163,10 @@ export default function Dashboard() {
     { title:'Net Profit (FY)',   value:fmt(p.netProfit),            sub:p.margin?`${p.margin}% margin`:'',      color:p.netProfit>=0?'success':'error', icon:<Assessment fontSize="small"/>, path:'/reports/profit-analysis' },
   ];
 
+  const KNOWN_ROLES = ['Administrator','Manager','Chief Accountant','Junior Accountant',
+    'Cashier','Sales Executive','Store Keeper','Production Operator','Auditor'];
+  const hasOnlyCustomRoles = !isAdmin && userRoles.every((r) => !KNOWN_ROLES.includes(r));
+
   // Pick KPIs based on role
   let kpis = adminKpis;
   if (!isAdmin) {
@@ -171,7 +175,8 @@ export default function Dashboard() {
     else if (primaryRole === 'Store Keeper' || primaryRole === 'Production Operator') kpis = storeKpis;
     else if (primaryRole === 'Cashier') kpis = cashierKpis;
     else if (primaryRole === 'Manager') kpis = adminKpis;
-    else kpis = adminKpis; // Unknown custom roles get full view — admin can restrict via permissions
+    else if (hasOnlyCustomRoles) kpis = salesKpis; // Custom roles: basic 2-card view
+    else kpis = salesKpis;
   }
 
   const quickActions = getQuickActions(userRoles);

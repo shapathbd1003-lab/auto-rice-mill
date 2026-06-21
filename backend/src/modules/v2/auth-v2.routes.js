@@ -140,27 +140,50 @@ router.post('/logout', async (req, res) => {
 // GET /api/v2/auth/me
 router.get('/me', requireAuth, async (req, res) => {
   // Separate queries to avoid JOIN multiplication of roles
-  const [userRow, rolesRow] = await Promise.all([
+  const [userRow, rolesRow, permsRow] = await Promise.all([
     query(
       `SELECT u.id, u.name, u.email, u.phone, u.is_active, u.last_login,
-              m.name AS mill_name, bool_or(ro.name='Administrator') AS is_admin
+              m.name AS mill_name
        FROM users u JOIN mills m ON m.id=u.mill_id
-       LEFT JOIN user_roles ur ON ur.user_id=u.id
-       LEFT JOIN roles ro ON ro.id=ur.role_id
-       WHERE u.id=$1 GROUP BY u.id, m.name`,
+       WHERE u.id=$1`,
       [req.user.id]
     ),
     query(
-      `SELECT DISTINCT ro.name
-       FROM user_roles ur JOIN roles ro ON ro.id=ur.role_id
-       WHERE ur.user_id=$1 ORDER BY ro.name`,
+      `SELECT ro.name FROM user_roles ur JOIN roles ro ON ro.id=ur.role_id
+       WHERE ur.user_id=$1 GROUP BY ro.name ORDER BY ro.name`,
+      [req.user.id]
+    ),
+    // Get effective permissions — merged across all roles (max privilege)
+    query(
+      `SELECT rp.module,
+              bool_or(rp.can_view)    AS can_view,
+              bool_or(rp.can_create)  AS can_create,
+              bool_or(rp.can_edit)    AS can_edit,
+              bool_or(rp.can_delete)  AS can_delete,
+              bool_or(rp.can_approve) AS can_approve
+       FROM user_roles ur
+       JOIN role_permissions rp ON rp.role_id = ur.role_id
+       WHERE ur.user_id=$1
+       GROUP BY rp.module`,
       [req.user.id]
     ),
   ]);
   const user = userRow.rows[0];
   if (!user) return res.status(404).json({ success:false, error:{ code:'NOT_FOUND', message:'User not found' } });
   const roles = rolesRow.rows.map((r) => r.name);
-  success(res, { ...user, roles, isAdmin: user.is_admin });
+  const isAdmin = roles.includes('Administrator');
+  // Convert permissions array to object map for easy frontend lookup
+  const permissions = {};
+  for (const p of permsRow.rows) {
+    permissions[p.module] = {
+      can_view:    p.can_view,
+      can_create:  p.can_create,
+      can_edit:    p.can_edit,
+      can_delete:  p.can_delete,
+      can_approve: p.can_approve,
+    };
+  }
+  success(res, { ...user, roles, isAdmin, permissions });
 });
 
 module.exports = router;

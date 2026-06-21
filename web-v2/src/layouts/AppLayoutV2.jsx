@@ -32,39 +32,39 @@ const NAV = [
     ],
   },
   {
-    label:'Vouchers', icon:<ReceiptLong/>, children:[
-      { label:'Payment Voucher',  path:'/vouchers/payment',   roles:['Administrator','Manager','Chief Accountant','Junior Accountant','Cashier'] },
-      { label:'Receipt Voucher',  path:'/vouchers/receipt',   roles:['Administrator','Manager','Chief Accountant','Junior Accountant','Cashier','Sales Executive'] },
-      { label:'Contra Voucher',   path:'/vouchers/contra',    roles:['Administrator','Manager','Chief Accountant','Cashier'] },
-      { label:'Journal Voucher',  path:'/vouchers/journal',   roles:['Administrator','Manager','Chief Accountant','Junior Accountant'] },
-      { label:'Purchase Voucher', path:'/vouchers/purchase',  roles:['Administrator','Manager','Store Keeper'] },
-      { label:'Sales Voucher',    path:'/vouchers/sales',     roles:['Administrator','Manager','Sales Executive'] },
-      { label:'Debit Note',       path:'/vouchers/debit-note',roles:['Administrator','Manager','Chief Accountant'] },
-      { label:'Credit Note',      path:'/vouchers/credit-note',roles:['Administrator','Manager','Chief Accountant'] },
-      { label:'Production',       path:'/vouchers/production',roles:['Administrator','Manager','Store Keeper','Production Operator'] },
-      { label:'All Vouchers',     path:'/vouchers',           roles:['Administrator','Manager','Chief Accountant','Auditor'] },
+    label:'Vouchers', icon:<ReceiptLong/>, permModule:'vouchers', children:[
+      { label:'Payment Voucher',  path:'/vouchers/payment',    permModule:'vouchers', roles:['Administrator','Manager','Chief Accountant','Junior Accountant','Cashier'] },
+      { label:'Receipt Voucher',  path:'/vouchers/receipt',    permModule:'vouchers', roles:['Administrator','Manager','Chief Accountant','Junior Accountant','Cashier','Sales Executive'] },
+      { label:'Contra Voucher',   path:'/vouchers/contra',     permModule:'vouchers', roles:['Administrator','Manager','Chief Accountant','Cashier'] },
+      { label:'Journal Voucher',  path:'/vouchers/journal',    permModule:'vouchers', roles:['Administrator','Manager','Chief Accountant','Junior Accountant'] },
+      { label:'Purchase Voucher', path:'/vouchers/purchase',   permModule:'purchase', roles:['Administrator','Manager','Store Keeper'] },
+      { label:'Sales Voucher',    path:'/vouchers/sales',      permModule:'sales',    roles:['Administrator','Manager','Sales Executive'] },
+      { label:'Debit Note',       path:'/vouchers/debit-note', permModule:'vouchers', roles:['Administrator','Manager','Chief Accountant'] },
+      { label:'Credit Note',      path:'/vouchers/credit-note',permModule:'vouchers', roles:['Administrator','Manager','Chief Accountant'] },
+      { label:'Production',       path:'/vouchers/production',  permModule:'production',roles:['Administrator','Manager','Store Keeper','Production Operator'] },
+      { label:'All Vouchers',     path:'/vouchers',             permModule:'vouchers', roles:['Administrator','Manager','Chief Accountant','Auditor'] },
     ],
   },
   {
-    label:'Reports', icon:<Assessment/>, children:[
-      { label:'Trial Balance',    path:'/reports/trial-balance',   roles:['Administrator','Manager','Chief Accountant','Junior Accountant','Auditor'] },
-      { label:'Profit & Loss',    path:'/reports/profit-loss',     roles:['Administrator','Manager','Chief Accountant','Auditor'] },
-      { label:'Balance Sheet',    path:'/reports/balance-sheet',   roles:['Administrator','Manager','Chief Accountant','Auditor'] },
-      { label:'Day Book',         path:'/reports/day-book',        roles:['Administrator','Manager','Chief Accountant','Junior Accountant','Cashier','Auditor'] },
-      { label:'Customer Due',     path:'/reports/customer-due',    roles:['Administrator','Manager','Chief Accountant','Sales Executive','Auditor'] },
-      { label:'Supplier Due',     path:'/reports/supplier-due',    roles:['Administrator','Manager','Chief Accountant','Store Keeper','Auditor'] },
-      { label:'Paddy Purchase',   path:'/reports/paddy-purchase',  roles:['Administrator','Manager','Store Keeper','Auditor'] },
-      { label:'Production',       path:'/reports/production',      roles:['Administrator','Manager','Store Keeper','Production Operator','Auditor'] },
-      { label:'Stock Report',     path:'/reports/stock',           roles:['Administrator','Manager','Store Keeper','Production Operator','Auditor'] },
-      { label:'Profit Analysis',  path:'/reports/profit-analysis', roles:['Administrator','Manager','Chief Accountant','Auditor'] },
+    label:'Reports', icon:<Assessment/>, permModule:'reports', children:[
+      { label:'Trial Balance',    path:'/reports/trial-balance',   permModule:'reports', roles:['Administrator','Manager','Chief Accountant','Junior Accountant','Auditor'] },
+      { label:'Profit & Loss',    path:'/reports/profit-loss',     permModule:'reports', roles:['Administrator','Manager','Chief Accountant','Auditor'] },
+      { label:'Balance Sheet',    path:'/reports/balance-sheet',   permModule:'reports', roles:['Administrator','Manager','Chief Accountant','Auditor'] },
+      { label:'Day Book',         path:'/reports/day-book',        permModule:'reports', roles:['Administrator','Manager','Chief Accountant','Junior Accountant','Cashier','Auditor'] },
+      { label:'Customer Due',     path:'/reports/customer-due',    permModule:'reports', roles:['Administrator','Manager','Chief Accountant','Sales Executive','Auditor'] },
+      { label:'Supplier Due',     path:'/reports/supplier-due',    permModule:'reports', roles:['Administrator','Manager','Chief Accountant','Store Keeper','Auditor'] },
+      { label:'Paddy Purchase',   path:'/reports/paddy-purchase',  permModule:'reports', roles:['Administrator','Manager','Store Keeper','Auditor'] },
+      { label:'Production',       path:'/reports/production',      permModule:'reports', roles:['Administrator','Manager','Store Keeper','Production Operator','Auditor'] },
+      { label:'Stock Report',     path:'/reports/stock',           permModule:'inventory',roles:['Administrator','Manager','Store Keeper','Production Operator','Auditor'] },
+      { label:'Profit Analysis',  path:'/reports/profit-analysis', permModule:'reports', roles:['Administrator','Manager','Chief Accountant','Auditor'] },
     ],
   },
   {
-    label:'Mill Operations', icon:<Factory/>, children:[
-      { label:'Inventory',        path:'/inventory',  roles:['Administrator','Manager','Store Keeper','Production Operator'] },
-      { label:'Production',       path:'/production', roles:['Administrator','Manager','Store Keeper','Production Operator'] },
-      { label:'Employees',        path:'/employees',  roles:['Administrator','Manager'] },
-      { label:'Vehicles',         path:'/vehicles',   roles:['Administrator','Manager'] },
+    label:'Mill Operations', icon:<Factory/>, permModule:'inventory', children:[
+      { label:'Inventory',   path:'/inventory',  permModule:'inventory',   roles:['Administrator','Manager','Store Keeper','Production Operator'] },
+      { label:'Production',  path:'/production', permModule:'production',  roles:['Administrator','Manager','Store Keeper','Production Operator'] },
+      { label:'Employees',   path:'/employees',  permModule:'employees',   roles:['Administrator','Manager'] },
+      { label:'Vehicles',    path:'/vehicles',   permModule:'employees',   roles:['Administrator','Manager'] },
     ],
   },
   {
@@ -84,11 +84,27 @@ function NavItem({ item, level=0, onClose }) {
 
   if (item.adminOnly && !user?.isAdmin) return null;
 
-  // Check role-based access for leaf items
+  // Permission check for leaf items — use DB permissions if available
   if (item.roles && !user?.isAdmin) {
+    const dbPerms = user?.permissions || {};
     const userRoles = user?.roles || [];
-    const hasAccess = item.roles.some((r) => userRoles.includes(r));
-    if (!hasAccess) return null;
+
+    // If admin has configured DB permissions for this user's role,
+    // use the module permission to decide visibility
+    if (item.permModule && Object.keys(dbPerms).length > 0) {
+      const mod = dbPerms[item.permModule];
+      if (!mod?.can_view) return null;
+    } else {
+      // Fall back to role-name based check
+      const KNOWN_ROLES = ['Administrator','Manager','Chief Accountant','Junior Accountant',
+        'Cashier','Sales Executive','Store Keeper','Production Operator','Auditor'];
+      const hasOnlyCustomRoles = userRoles.every((r) => !KNOWN_ROLES.includes(r));
+      if (!hasOnlyCustomRoles) {
+        const hasAccess = item.roles.some((r) => userRoles.includes(r));
+        if (!hasAccess) return null;
+      }
+      // Custom roles with no DB permissions see everything
+    }
   }
 
   const isActive = item.path
@@ -99,11 +115,27 @@ function NavItem({ item, level=0, onClose }) {
 
   // Hide parent section if user has no access to any child
   if (item.children && !user?.isAdmin) {
+    const dbPerms = user?.permissions || {};
     const userRoles = user?.roles || [];
-    const hasAnyChild = item.children.some((c) =>
-      !c.roles || c.roles.some((r) => userRoles.includes(r))
-    );
-    if (!hasAnyChild) return null;
+    const KNOWN_ROLES = ['Administrator','Manager','Chief Accountant','Junior Accountant',
+      'Cashier','Sales Executive','Store Keeper','Production Operator','Auditor'];
+    const hasOnlyCustomRoles = userRoles.every((r) => !KNOWN_ROLES.includes(r));
+
+    if (!hasOnlyCustomRoles && Object.keys(dbPerms).length === 0) {
+      // No DB permissions yet — use role-name filter
+      const hasAnyChild = item.children.some((c) =>
+        !c.roles || c.roles.some((r) => userRoles.includes(r))
+      );
+      if (!hasAnyChild) return null;
+    } else if (!hasOnlyCustomRoles && Object.keys(dbPerms).length > 0) {
+      // Has DB permissions — check if any child module is permitted
+      const hasAnyChild = item.children.some((c) =>
+        !c.permModule || dbPerms[c.permModule]?.can_view ||
+        c.roles?.some((r) => userRoles.includes(r))
+      );
+      if (!hasAnyChild) return null;
+    }
+    // Custom roles (no DB perms set) see everything
   }
 
   if (item.children) {
@@ -155,15 +187,15 @@ export default function AppLayoutV2() {
         const me = r.data.data;
         if (me) {
           dispatch(refreshUser({
-            name:    me.name,
-            email:   me.email,
-            roles:   me.roles || [],
-            // isAdmin = true only if user has Administrator role in DB
-            isAdmin: Array.isArray(me.roles) && me.roles.includes('Administrator'),
+            name:        me.name,
+            email:       me.email,
+            roles:       me.roles || [],
+            isAdmin:     Array.isArray(me.roles) && me.roles.includes('Administrator'),
+            permissions: me.permissions || {}, // DB-driven module permissions
           }));
         }
       })
-      .catch(() => {}); // silently ignore — use cached JWT data
+      .catch(() => {}); // silently ignore — use cached data
   }, [dispatch]);
 
   const handleLogout = async () => {
