@@ -5,6 +5,7 @@ import {
   TableRow, Chip, IconButton, Dialog, DialogTitle, DialogContent, DialogActions,
   Grid, TextField, CircularProgress, Alert, Select, MenuItem, FormControl, InputLabel,
   Card, CardContent, CardActionArea, Checkbox, Stack, useMediaQuery, useTheme,
+  Switch, FormControlLabel,
 } from '@mui/material';
 import { Add, Edit, Delete, Security, People, History } from '@mui/icons-material';
 import api from '../../services/api';
@@ -19,12 +20,22 @@ function RolesTab() {
   const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [dialog, setDialog] = useState(false);
+  const [editRole, setEditRole] = useState(null);
   const [form, setForm] = useState({ name:'', description:'', permissions:{} });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
 
   const load = () => { setLoading(true); api.get('/v2/masters/roles').then((r) => setRoles(r.data.data||[])).finally(() => setLoading(false)); };
   useEffect(() => { load(); }, []);
+
+  const openAdd = () => { setEditRole(null); setForm({ name:'', description:'', permissions:{} }); setError(''); setDialog(true); };
+  const openEdit = (r) => {
+    setEditRole(r);
+    const perms = {};
+    setForm({ name:r.name, description:r.description||'', permissions:perms });
+    setError(''); setDialog(true);
+  };
 
   const togglePerm = (module, action) => {
     const perms = { ...form.permissions };
@@ -37,16 +48,37 @@ function RolesTab() {
     setSaving(true); setError('');
     try {
       const permissions = MODULES.map((m) => ({ module:m, ...(form.permissions[m]||{ can_view:false, can_create:false, can_edit:false, can_delete:false, can_approve:false }) }));
-      await api.post('/v2/masters/roles', { name:form.name, description:form.description, permissions });
+      if (editRole) {
+        await api.put(`/v2/masters/roles/${editRole.id}`, { name:form.name, description:form.description, permissions });
+      } else {
+        await api.post('/v2/masters/roles', { name:form.name, description:form.description, permissions });
+      }
       setDialog(false); setForm({ name:'', description:'', permissions:{} }); load();
     } catch(e) { setError(e.response?.data?.error?.message||'Failed'); }
     finally { setSaving(false); }
   };
 
+  const handleDelete = async (id) => {
+    try { await api.delete(`/v2/masters/roles/${id}`); setDeleteConfirm(null); load(); }
+    catch(e) { alert(e.response?.data?.error?.message||'Cannot delete'); }
+  };
+
+  const RoleRow = ({ r }) => (
+    <>
+      <Chip label={r.name} color={ROLE_COLORS[r.name]||'default'} size="small"/>
+      {!r.is_system && (
+        <Box sx={{ display:'inline-flex', ml:1 }}>
+          <IconButton size="small" onClick={() => openEdit(r)}><Edit fontSize="small"/></IconButton>
+          <IconButton size="small" color="error" onClick={() => setDeleteConfirm(r)}><Delete fontSize="small"/></IconButton>
+        </Box>
+      )}
+    </>
+  );
+
   return (
     <>
       <Box sx={{ display:'flex', justifyContent:'flex-end', mb:2 }}>
-        <Button variant="contained" startIcon={<Add/>} onClick={() => { setForm({ name:'', description:'', permissions:{} }); setError(''); setDialog(true); }} sx={{ bgcolor:'#1B5E20' }}>
+        <Button variant="contained" startIcon={<Add/>} onClick={openAdd} sx={{ bgcolor:'#1B5E20' }}>
           Create Role
         </Button>
       </Box>
@@ -63,9 +95,12 @@ function RolesTab() {
                     <Typography variant="caption" display="block" color="text.secondary">{r.description}</Typography>
                     <Chip label={`${r.user_count} users`} size="small" variant="outlined" sx={{ mt:0.5 }}/>
                   </Box>
-                  <Box>
+                  <Box sx={{ display:'flex', gap:0.5 }}>
                     {r.is_system && <Chip label="System" size="small"/>}
-                    {!r.is_system && <><IconButton size="small"><Edit fontSize="small"/></IconButton><IconButton size="small" color="error"><Delete fontSize="small"/></IconButton></>}
+                    {!r.is_system && <>
+                      <IconButton size="small" onClick={() => openEdit(r)}><Edit fontSize="small"/></IconButton>
+                      <IconButton size="small" color="error" onClick={() => setDeleteConfirm(r)}><Delete fontSize="small"/></IconButton>
+                    </>}
                   </Box>
                 </Box>
               </CardContent>
@@ -85,7 +120,10 @@ function RolesTab() {
                     <TableCell><Chip label={`${r.user_count} users`} size="small" variant="outlined"/></TableCell>
                     <TableCell>{r.is_system ? <Chip label="System" size="small"/> : '—'}</TableCell>
                     <TableCell align="center">
-                      {!r.is_system && <><IconButton size="small"><Edit fontSize="small"/></IconButton><IconButton size="small" color="error"><Delete fontSize="small"/></IconButton></>}
+                      {!r.is_system && <>
+                        <IconButton size="small" onClick={() => openEdit(r)}><Edit fontSize="small"/></IconButton>
+                        <IconButton size="small" color="error" onClick={() => setDeleteConfirm(r)}><Delete fontSize="small"/></IconButton>
+                      </>}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -94,12 +132,13 @@ function RolesTab() {
         </Paper>
       )}
 
+      {/* Create/Edit Role Dialog */}
       <Dialog open={dialog} onClose={() => setDialog(false)} maxWidth="md" fullWidth fullScreen={isMobile}>
-        <DialogTitle>Create New Role</DialogTitle>
+        <DialogTitle>{editRole ? `Edit Role: ${editRole.name}` : 'Create New Role'}</DialogTitle>
         <DialogContent>
           {error && <Alert severity="error" sx={{ mb:2 }}>{error}</Alert>}
           <Grid container spacing={2} sx={{ mt:0 }}>
-            <Grid item xs={12} sm={6}><TextField fullWidth size="small" label="Role Name *" value={form.name} onChange={(e) => setForm({...form,name:e.target.value})} autoFocus/></Grid>
+            <Grid item xs={12} sm={6}><TextField fullWidth size="small" label="Role Name *" value={form.name} onChange={(e) => setForm({...form,name:e.target.value})} autoFocus disabled={!!editRole?.is_system}/></Grid>
             <Grid item xs={12} sm={6}><TextField fullWidth size="small" label="Description" value={form.description} onChange={(e) => setForm({...form,description:e.target.value})}/></Grid>
           </Grid>
           <Typography variant="subtitle2" sx={{ mt:2, mb:1 }}>Module Permissions</Typography>
@@ -111,7 +150,7 @@ function RolesTab() {
                   const p = form.permissions[m]||{};
                   return (
                     <TableRow key={m} hover>
-                      <TableCell sx={{ textTransform:'capitalize', fontWeight:'medium', fontSize:12 }}>{m}</TableCell>
+                      <TableCell sx={{ textTransform:'capitalize', fontSize:12 }}>{m}</TableCell>
                       {['can_view','can_create','can_edit','can_delete','can_approve'].map((a) => (
                         <TableCell key={a} align="center" sx={{ p:0 }}>
                           <Checkbox size="small" checked={!!p[a]} onChange={() => togglePerm(m,a)} sx={{ color:'#1B5E20', '&.Mui-checked':{ color:'#1B5E20' } }}/>
@@ -127,8 +166,18 @@ function RolesTab() {
         <DialogActions>
           <Button onClick={() => setDialog(false)}>Cancel</Button>
           <Button variant="contained" onClick={handleSave} disabled={saving||!form.name} sx={{ bgcolor:'#1B5E20' }}>
-            {saving ? <CircularProgress size={20}/> : 'Create Role'}
+            {saving ? <CircularProgress size={20}/> : editRole ? 'Update Role' : 'Create Role'}
           </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Delete Confirm */}
+      <Dialog open={Boolean(deleteConfirm)} onClose={() => setDeleteConfirm(null)} maxWidth="xs">
+        <DialogTitle>Delete Role?</DialogTitle>
+        <DialogContent><Typography>Delete <strong>{deleteConfirm?.name}</strong>? This cannot be undone.</Typography></DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteConfirm(null)}>Cancel</Button>
+          <Button color="error" variant="contained" onClick={() => handleDelete(deleteConfirm?.id)}>Delete</Button>
         </DialogActions>
       </Dialog>
     </>
@@ -142,7 +191,8 @@ function UsersTab() {
   const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [dialog, setDialog] = useState(false);
-  const [form, setForm] = useState({ name:'', email:'', phone:'', password:'', role_ids:[] });
+  const [editUser, setEditUser] = useState(null);
+  const [form, setForm] = useState({ name:'', email:'', phone:'', password:'', role_ids:[], is_active:true });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -154,11 +204,18 @@ function UsersTab() {
   };
   useEffect(() => { load(); }, []);
 
+  const openAdd = () => { setEditUser(null); setForm({ name:'', email:'', phone:'', password:'', role_ids:[], is_active:true }); setError(''); setDialog(true); };
+  const openEdit = (u) => { setEditUser(u); setForm({ name:u.name, email:u.email, phone:u.phone||'', password:'', role_ids:[], is_active:u.is_active }); setError(''); setDialog(true); };
+
   const handleSave = async () => {
     setSaving(true); setError('');
     try {
-      await api.post('/v2/masters/users', form);
-      setDialog(false); setForm({ name:'', email:'', phone:'', password:'', role_ids:[] }); load();
+      if (editUser) {
+        await api.put(`/v2/masters/users/${editUser.id}`, { name:form.name, phone:form.phone, is_active:form.is_active, ...(form.password ? { password:form.password } : {}), ...(form.role_ids.length>0 ? { role_ids:form.role_ids } : {}) });
+      } else {
+        await api.post('/v2/masters/users', { name:form.name, email:form.email, phone:form.phone, password:form.password, role_ids:form.role_ids });
+      }
+      setDialog(false); load();
     } catch(e) { setError(e.response?.data?.error?.message||'Failed'); }
     finally { setSaving(false); }
   };
@@ -166,10 +223,9 @@ function UsersTab() {
   return (
     <>
       <Box sx={{ display:'flex', justifyContent:'flex-end', mb:2 }}>
-        <Button variant="contained" startIcon={<Add/>} onClick={() => { setForm({ name:'', email:'', phone:'', password:'', role_ids:[] }); setError(''); setDialog(true); }} sx={{ bgcolor:'#1B5E20' }}>Add User</Button>
+        <Button variant="contained" startIcon={<Add/>} onClick={openAdd} sx={{ bgcolor:'#1B5E20' }}>Add User</Button>
       </Box>
 
-      {/* Mobile: cards */}
       {isMobile ? (
         <Stack spacing={1}>
           {loading && <Box sx={{ textAlign:'center' }}><CircularProgress size={24}/></Box>}
@@ -183,13 +239,10 @@ function UsersTab() {
                     <Box sx={{ mt:0.5, display:'flex', flexWrap:'wrap', gap:0.5 }}>
                       {(u.roles||[]).map((r) => <Chip key={r} label={r} size="small" color={ROLE_COLORS[r]||'default'}/>)}
                     </Box>
-                    <Typography variant="caption" color="text.disabled" display="block" sx={{ mt:0.5 }}>
-                      {u.last_login ? `Last: ${new Date(u.last_login).toLocaleDateString('en-IN')}` : 'Never logged in'}
-                    </Typography>
                   </Box>
                   <Box sx={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:0.5 }}>
                     <Chip label={u.is_active?'Active':'Inactive'} color={u.is_active?'success':'default'} size="small"/>
-                    <IconButton size="small"><Edit fontSize="small"/></IconButton>
+                    <IconButton size="small" onClick={() => openEdit(u)}><Edit fontSize="small"/></IconButton>
                   </Box>
                 </Box>
               </CardContent>
@@ -197,7 +250,6 @@ function UsersTab() {
           ))}
         </Stack>
       ) : (
-        /* Desktop: table */
         <Paper>
           <Table size="small">
             <TableHead><TableRow sx={{ bgcolor:'grey.100' }}><TableCell>Name</TableCell><TableCell>Email</TableCell><TableCell>Roles</TableCell><TableCell>Last Login</TableCell><TableCell>Status</TableCell><TableCell align="center">Actions</TableCell></TableRow></TableHead>
@@ -210,7 +262,7 @@ function UsersTab() {
                     <TableCell>{(u.roles||[]).map((r) => <Chip key={r} label={r} size="small" color={ROLE_COLORS[r]||'default'} sx={{ mr:0.5 }}/>)}</TableCell>
                     <TableCell sx={{ fontSize:12 }}>{u.last_login ? new Date(u.last_login).toLocaleDateString('en-IN') : 'Never'}</TableCell>
                     <TableCell><Chip label={u.is_active?'Active':'Inactive'} color={u.is_active?'success':'default'} size="small"/></TableCell>
-                    <TableCell align="center"><IconButton size="small"><Edit fontSize="small"/></IconButton></TableCell>
+                    <TableCell align="center"><IconButton size="small" onClick={() => openEdit(u)}><Edit fontSize="small"/></IconButton></TableCell>
                   </TableRow>
                 ))}
             </TableBody>
@@ -219,30 +271,49 @@ function UsersTab() {
       )}
 
       <Dialog open={dialog} onClose={() => setDialog(false)} maxWidth="sm" fullWidth fullScreen={isMobile}>
-        <DialogTitle>Add New User</DialogTitle>
+        <DialogTitle>{editUser ? `Edit: ${editUser.name}` : 'Add New User'}</DialogTitle>
         <DialogContent>
           {error && <Alert severity="error" sx={{ mb:2 }}>{error}</Alert>}
           <Grid container spacing={2} sx={{ mt:0 }}>
             <Grid item xs={12} sm={6}><TextField fullWidth size="small" label="Full Name *" value={form.name} onChange={(e) => setForm({...form,name:e.target.value})} autoFocus/></Grid>
-            <Grid item xs={12} sm={6}><TextField fullWidth size="small" label="Email *" value={form.email} onChange={(e) => setForm({...form,email:e.target.value})}/></Grid>
+            <Grid item xs={12} sm={6}><TextField fullWidth size="small" label="Email *" value={form.email} onChange={(e) => setForm({...form,email:e.target.value})} disabled={!!editUser}/></Grid>
             <Grid item xs={12} sm={6}><TextField fullWidth size="small" label="Phone" value={form.phone} onChange={(e) => setForm({...form,phone:e.target.value})}/></Grid>
-            <Grid item xs={12} sm={6}><TextField fullWidth size="small" label="Password *" type="password" value={form.password} onChange={(e) => setForm({...form,password:e.target.value})}/></Grid>
+            <Grid item xs={12} sm={6}><TextField fullWidth size="small" label={editUser ? 'New Password (blank = keep)' : 'Password *'} type="password" value={form.password} onChange={(e) => setForm({...form,password:e.target.value})}/></Grid>
             <Grid item xs={12}>
               <FormControl fullWidth size="small">
-                <InputLabel>Assign Roles *</InputLabel>
-                <Select multiple value={form.role_ids} label="Assign Roles *"
+                <InputLabel>Assign Roles {!editUser && '*'}</InputLabel>
+                <Select
+                  multiple
+                  value={form.role_ids}
+                  label={`Assign Roles ${!editUser ? '*' : ''}`}
                   onChange={(e) => setForm({...form,role_ids:e.target.value})}
-                  renderValue={(sel) => roles.filter((r) => sel.includes(r.id)).map((r) => <Chip key={r.id} label={r.name} size="small" sx={{ mr:0.5 }}/>)}>
-                  {roles.map((r) => <MenuItem key={r.id} value={r.id}><Chip label={r.name} size="small" color={ROLE_COLORS[r.name]||'default'} sx={{ mr:1 }}/>{r.name}</MenuItem>)}
+                  MenuProps={{ PaperProps:{ style:{ maxHeight:200 } } }}
+                  renderValue={(sel) => (
+                    <Box sx={{ display:'flex', flexWrap:'wrap', gap:0.5 }}>
+                      {roles.filter((r) => sel.includes(r.id)).map((r) => <Chip key={r.id} label={r.name} size="small"/>)}
+                    </Box>
+                  )}>
+                  {roles.map((r) => (
+                    <MenuItem key={r.id} value={r.id}>
+                      <Chip label={r.name} size="small" color={ROLE_COLORS[r.name]||'default'} sx={{ mr:1 }}/>{r.description||r.name}
+                    </MenuItem>
+                  ))}
                 </Select>
               </FormControl>
             </Grid>
+            {editUser && (
+              <Grid item xs={12}>
+                <FormControlLabel control={<Switch checked={form.is_active} onChange={(e) => setForm({...form,is_active:e.target.checked})}/>} label="Active"/>
+              </Grid>
+            )}
           </Grid>
         </DialogContent>
-        <DialogActions>
+        <DialogActions sx={{ px:3, pb:2 }}>
           <Button onClick={() => setDialog(false)}>Cancel</Button>
-          <Button variant="contained" onClick={handleSave} disabled={saving||!form.name||!form.email||!form.password||form.role_ids.length===0} sx={{ bgcolor:'#1B5E20' }}>
-            {saving ? <CircularProgress size={20}/> : 'Create User'}
+          <Button variant="contained" onClick={handleSave}
+            disabled={saving || !form.name || (!editUser && (!form.email || !form.password || form.role_ids.length===0))}
+            sx={{ bgcolor:'#1B5E20' }}>
+            {saving ? <CircularProgress size={20}/> : editUser ? 'Update User' : 'Create User'}
           </Button>
         </DialogActions>
       </Dialog>
