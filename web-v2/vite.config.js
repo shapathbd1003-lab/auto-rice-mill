@@ -1,7 +1,12 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { fileURLToPath } from 'url';
+import { dirname, resolve } from 'path';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
+  root: __dirname,
   plugins: [react()],
   server: {
     port: 5173,
@@ -10,10 +15,11 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: 'dist',
+    outDir: resolve(__dirname, 'dist'),
+    emptyOutDir: true,
     sourcemap: false,
     rollupOptions: {
-      input: 'index.html',
+      input: resolve(__dirname, 'index.html'),
       output: {
         manualChunks: {
           'vendor-react': ['react', 'react-dom', 'react-router-dom'],
