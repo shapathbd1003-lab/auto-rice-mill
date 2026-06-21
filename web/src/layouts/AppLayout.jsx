@@ -97,6 +97,8 @@ export default function AppLayout() {
     localStorage.setItem('lang', next);
   };
 
+  const langLabel = i18n.language === 'en' ? 'বাংলা' : 'EN';
+
   const currentNavKey = allNavItems.find(
     (n) => n.path === location.pathname || (n.path !== '/' && location.pathname.startsWith(n.path))
   )?.key || 'dashboard';
@@ -138,7 +140,7 @@ export default function AppLayout() {
       </List>
 
       <Divider />
-      <SectionLabel label="KHATA BOOK" />
+      <SectionLabel label={t('nav.sections.khata')} />
       <List dense disablePadding>
         {khataNavItems.map(({ key, icon, path }) => (
           <NavItem key={key} icon={icon} path={path} label={t(`nav.${key}`)} />
@@ -146,7 +148,7 @@ export default function AppLayout() {
       </List>
 
       <Divider />
-      <SectionLabel label="TALLY ERP" />
+      <SectionLabel label={t('nav.sections.erp')} />
       <List dense disablePadding>
         {erpNavItems.map(({ key, icon, path }) => (
           <NavItem key={key} icon={icon} path={path} label={t(`nav.${key}`)} />
@@ -154,13 +156,13 @@ export default function AppLayout() {
       </List>
 
       <Divider />
-      <SectionLabel label="RICE MILL" />
+      <SectionLabel label={t('nav.sections.mill')} />
       <List dense disablePadding>
         {millNavItems.map(({ key, icon, path }) => (
           <NavItem key={key} icon={icon} path={path} label={t(`nav.${key}`)} />
         ))}
       </List>
-      <Box sx={{ height: 16 }} />
+      <Box sx={{ height: 32 }} />
     </Box>
   );
 
@@ -185,12 +187,15 @@ export default function AppLayout() {
             <Chip label="OFFLINE" size="small" color="warning" sx={{ mr: 1, fontSize: 10 }} />
           )}
 
-          {/* Language toggle — hide label on mobile */}
-          <IconButton color="inherit" onClick={toggleLang} size="small" sx={{ mr: 0.5 }}>
-            <Translate fontSize="small" />
-            {!isMobile && (
-              <Typography variant="caption" sx={{ ml: 0.5 }}>{i18n.language.toUpperCase()}</Typography>
-            )}
+          {/* Language toggle — always shows both */}
+          <IconButton color="inherit" onClick={toggleLang} size="small" sx={{ mr: 0.5, borderRadius: 1, px: 0.5 }}>
+            <Typography variant="caption" sx={{ fontSize: { xs: 10, sm: 12 }, fontWeight: 'bold', lineHeight: 1 }}>
+              বাংলা
+            </Typography>
+            <Typography variant="caption" sx={{ fontSize: { xs: 9, sm: 11 }, mx: 0.3, opacity: 0.6 }}>|</Typography>
+            <Typography variant="caption" sx={{ fontSize: { xs: 10, sm: 12 }, fontWeight: 'bold', lineHeight: 1 }}>
+              EN
+            </Typography>
           </IconButton>
 
           <IconButton color="inherit" onClick={() => navigate('/notifications')} size="small" sx={{ mr: 0.5 }}>
@@ -228,6 +233,8 @@ export default function AppLayout() {
             boxSizing: 'border-box',
             top: 64,
             height: 'calc(100% - 64px)',
+            overflowY: 'auto',
+            overflowX: 'hidden',
           },
         }}
       >
