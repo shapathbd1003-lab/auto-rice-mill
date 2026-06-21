@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   Box, Typography, List, ListItem, ListItemText, ListItemIcon,
@@ -12,13 +13,14 @@ import { setNotifications, markRead, markAllRead } from '../../store/notificatio
 import api from '../../services/api';
 
 const TYPE_META = {
-  LOW_STOCK:       { icon: <Inventory />,       color: 'warning' },
-  OVERDUE_PAYMENT: { icon: <AccountBalance />,  color: 'error' },
-  SALARY_REMINDER: { icon: <Warning />,         color: 'warning' },
-  DAILY_SUMMARY:   { icon: <Info />,            color: 'info' },
+  LOW_STOCK:       { icon: <Inventory />,      color: 'warning' },
+  OVERDUE_PAYMENT: { icon: <AccountBalance />, color: 'error' },
+  SALARY_REMINDER: { icon: <Warning />,        color: 'warning' },
+  DAILY_SUMMARY:   { icon: <Info />,           color: 'info' },
 };
 
 export default function Notifications() {
+  const { t } = useTranslation();
   const dispatch = useDispatch();
   const { items } = useSelector((s) => s.notifications);
   const [loading, setLoading] = React.useState(false);
@@ -47,9 +49,9 @@ export default function Notifications() {
   return (
     <Box>
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-        <Typography variant="h5" fontWeight="bold">Notifications</Typography>
+        <Typography variant="h5" fontWeight="bold">{t('notification.title')}</Typography>
         <Button size="small" startIcon={<DoneAll />} onClick={handleMarkAll} disabled={!items.some((n) => !n.is_read)}>
-          Mark all read
+          {t('notification.markAllRead')}
         </Button>
       </Box>
 
@@ -58,7 +60,7 @@ export default function Notifications() {
       ) : items.length === 0 ? (
         <Paper sx={{ p: 6, textAlign: 'center' }}>
           <CheckCircle sx={{ fontSize: 56, color: 'success.light', mb: 1 }} />
-          <Typography color="text.secondary">No notifications</Typography>
+          <Typography color="text.secondary">{t('notification.noNotifications')}</Typography>
         </Paper>
       ) : (
         <Paper>
@@ -72,7 +74,7 @@ export default function Notifications() {
                     sx={{ bgcolor: n.is_read ? 'transparent' : 'action.hover', alignItems: 'flex-start' }}
                     secondaryAction={
                       !n.is_read && (
-                        <IconButton size="small" onClick={() => handleMarkRead(n.id)} title="Mark as read">
+                        <IconButton size="small" onClick={() => handleMarkRead(n.id)}>
                           <CheckCircle fontSize="small" color="success" />
                         </IconButton>
                       )
@@ -85,14 +87,14 @@ export default function Notifications() {
                           <Typography variant="body2" fontWeight={n.is_read ? 'normal' : 'bold'}>
                             {n.title}
                           </Typography>
-                          {!n.is_read && <Chip label="New" size="small" color={color} sx={{ height: 18, fontSize: 10 }} />}
+                          {!n.is_read && <Chip label={t('common.new')} size="small" color={color} sx={{ height: 18, fontSize: 10 }} />}
                         </Box>
                       }
                       secondary={
                         <>
                           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25 }}>{n.message}</Typography>
                           <Typography variant="caption" color="text.disabled">
-                            {new Date(n.created_at).toLocaleString('en-BD')}
+                            {new Date(n.created_at).toLocaleString('en-IN')}
                           </Typography>
                         </>
                       }

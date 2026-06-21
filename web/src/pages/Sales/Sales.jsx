@@ -90,7 +90,7 @@ export default function Sales() {
         <Stack spacing={1}>
           {loading && <Box sx={{ textAlign: 'center', py: 3 }}><CircularProgress size={24} /></Box>}
           {!loading && rows.length === 0 && (
-            <Paper sx={{ p: 3, textAlign: 'center', color: 'text.secondary' }}>No sales found</Paper>
+            <Paper sx={{ p: 3, textAlign: 'center', color: 'text.secondary' }}>{t('sales.noFound')}</Paper>
           )}
           {rows.map((row) => (
             <Card key={row.id} variant="outlined">
