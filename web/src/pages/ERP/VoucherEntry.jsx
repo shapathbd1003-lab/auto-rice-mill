@@ -4,6 +4,7 @@ import {
   Dialog, DialogTitle, DialogContent, DialogActions, CircularProgress,
   Alert, Select, MenuItem, FormControl, InputLabel, Table, TableBody,
   TableCell, TableHead, TableRow, Tabs, Tab, Autocomplete, Divider,
+  useMediaQuery, useTheme,
 } from '@mui/material';
 import { Add, Delete, Check, Close, Visibility } from '@mui/icons-material';
 import api from '../../services/api';
@@ -134,12 +135,12 @@ function VoucherForm({ ledgers, onSaved, defaultType }) {
         </TableBody>
       </Table>
 
-      <Box sx={{ display: 'flex', gap: 2, mt: 1, alignItems: 'center' }}>
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1, alignItems: 'center' }}>
         <Button size="small" onClick={addItem} startIcon={<Add />}>Add Line</Button>
-        <Box sx={{ ml: 'auto', display: 'flex', gap: 3 }}>
-          <Typography variant="body2">Dr Total: <strong style={{ color: '#1976d2' }}>{fmt(totalDr)}</strong></Typography>
-          <Typography variant="body2">Cr Total: <strong style={{ color: '#388e3c' }}>{fmt(totalCr)}</strong></Typography>
-          <Chip label={balanced ? 'Balanced' : 'Not Balanced'} color={balanced ? 'success' : 'error'} size="small" />
+        <Box sx={{ ml: { xs:0, sm:'auto' }, display: 'flex', gap: { xs:1, sm:3 }, flexWrap:'wrap', alignItems:'center' }}>
+          <Typography variant="body2">Dr: <strong style={{ color: '#1976d2' }}>{fmt(totalDr)}</strong></Typography>
+          <Typography variant="body2">Cr: <strong style={{ color: '#388e3c' }}>{fmt(totalCr)}</strong></Typography>
+          <Chip label={balanced ? 'Balanced ✓' : 'Not Balanced'} color={balanced ? 'success' : 'error'} size="small" />
         </Box>
       </Box>
 
@@ -158,6 +159,8 @@ function VoucherForm({ ledgers, onSaved, defaultType }) {
 }
 
 export default function VoucherEntry() {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [tab, setTab] = useState(0);
   const [vouchers, setVouchers] = useState([]);
   const [ledgers, setLedgers] = useState([]);
@@ -201,8 +204,8 @@ export default function VoucherEntry() {
 
       {tab === 1 && (
         <>
-          <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap' }}>
-            <FormControl size="small" sx={{ width: 180 }}>
+          <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
+            <FormControl size="small" sx={{ width: { xs: '100%', sm: 180 } }}>
               <InputLabel>Type</InputLabel>
               <Select value={filter.type} label="Type" onChange={(e) => setFilter({ ...filter, type: e.target.value })}>
                 <MenuItem value="">All Types</MenuItem>
@@ -210,9 +213,11 @@ export default function VoucherEntry() {
               </Select>
             </FormControl>
             <TextField size="small" label="From" type="date" value={filter.from}
-              onChange={(e) => setFilter({ ...filter, from: e.target.value })} InputLabelProps={{ shrink: true }} />
+              onChange={(e) => setFilter({ ...filter, from: e.target.value })} InputLabelProps={{ shrink: true }}
+              sx={{ width: { xs: '100%', sm: 150 } }} />
             <TextField size="small" label="To" type="date" value={filter.to}
-              onChange={(e) => setFilter({ ...filter, to: e.target.value })} InputLabelProps={{ shrink: true }} />
+              onChange={(e) => setFilter({ ...filter, to: e.target.value })} InputLabelProps={{ shrink: true }}
+              sx={{ width: { xs: '100%', sm: 150 } }} />
           </Box>
           <Paper>
             <Table size="small">

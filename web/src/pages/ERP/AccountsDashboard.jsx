@@ -57,27 +57,29 @@ export default function AccountsDashboard() {
       </Box>
 
       {/* 6 KPI cards */}
-      <Grid container spacing={2} sx={{ mb:3 }}>
+      <Grid container spacing={{ xs:1, sm:2 }} sx={{ mb:3 }}>
         {[
-          { label:"Today's Sales",     value: fmt(data.todaySales?.total),    sub:`${data.todaySales?.count||0} invoices`,    color:'success', icon:<TrendingUp /> },
-          { label:"Today's Purchases", value: fmt(data.todayPurchases?.total),sub:`${data.todayPurchases?.count||0} entries`,  color:'warning', icon:<TrendingDown /> },
-          { label:'Customer Due',      value: fmt(data.customerDue?.total),   sub:`${data.customerDue?.count||0} accounts`,   color:'error',   icon:<People /> },
-          { label:'Supplier Due',      value: fmt(data.supplierDue?.total),   sub:`${data.supplierDue?.count||0} accounts`,   color:'warning', icon:<LocalShipping /> },
-          { label:'Cash Balance',      value: fmt(data.cashBalance),          sub:'All cash & bank',                          color:'primary', icon:<AccountBalanceWallet /> },
+          { label:"Today's Sales",     value: fmt(data.todaySales?.total),    sub:`${data.todaySales?.count||0} invoices`,    color:'success', icon:<TrendingUp fontSize="small" /> },
+          { label:"Today's Purchases", value: fmt(data.todayPurchases?.total),sub:`${data.todayPurchases?.count||0} entries`,  color:'warning', icon:<TrendingDown fontSize="small" /> },
+          { label:'Customer Due',      value: fmt(data.customerDue?.total),   sub:`${data.customerDue?.count||0} accounts`,   color:'error',   icon:<People fontSize="small" /> },
+          { label:'Supplier Due',      value: fmt(data.supplierDue?.total),   sub:`${data.supplierDue?.count||0} accounts`,   color:'warning', icon:<LocalShipping fontSize="small" /> },
+          { label:'Cash Balance',      value: fmt(data.cashBalance),          sub:'All accounts',                             color:'primary', icon:<AccountBalanceWallet fontSize="small" /> },
           { label:'Due Alert',
             value: (data.customerDue?.total||0) > 0 ? 'Has Dues' : 'Clear',
             sub: 'Customer outstanding',
             color: (data.customerDue?.total||0) > 0 ? 'error' : 'success',
-            icon: <Warning /> },
+            icon: <Warning fontSize="small" /> },
         ].map((c) => (
           <Grid item xs={6} sm={4} md={2} key={c.label}>
-            <Paper sx={{ p:1.5, borderTop:`3px solid`, borderColor:`${c.color}.main`, height:'100%' }}>
-              <Box sx={{ display:'flex', alignItems:'center', mb:0.5, color:`${c.color}.main` }}>
+            <Paper sx={{ p:{ xs:1, sm:1.5 }, borderTop:`3px solid`, borderColor:`${c.color}.main`, height:'100%' }}>
+              <Box sx={{ display:'flex', alignItems:'center', mb:0.5, color:`${c.color}.main`, gap:0.5 }}>
                 {c.icon}
-                <Typography variant="caption" sx={{ ml:0.5 }}>{c.label}</Typography>
+                <Typography variant="caption" noWrap sx={{ fontSize:{ xs:9, sm:11 } }}>{c.label}</Typography>
               </Box>
-              <Typography variant="h6" fontWeight="bold" color={`${c.color}.main`}>{c.value}</Typography>
-              <Typography variant="caption" color="text.secondary">{c.sub}</Typography>
+              <Typography variant="h6" fontWeight="bold" color={`${c.color}.main`} noWrap sx={{ fontSize:{ xs:'0.95rem', sm:'1.1rem' } }}>
+                {c.value}
+              </Typography>
+              <Typography variant="caption" color="text.secondary" noWrap sx={{ fontSize:9 }}>{c.sub}</Typography>
             </Paper>
           </Grid>
         ))}

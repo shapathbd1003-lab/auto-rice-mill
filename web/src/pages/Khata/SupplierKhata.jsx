@@ -4,8 +4,9 @@ import {
   List, ListItem, ListItemText, ListItemSecondaryAction, Divider, Chip,
   Dialog, DialogTitle, DialogContent, DialogActions, CircularProgress,
   Alert, Avatar, Table, TableBody, TableCell, TableHead, TableRow,
+  useMediaQuery, useTheme,
 } from '@mui/material';
-import { Search, Add, ArrowUpward, ArrowDownward } from '@mui/icons-material';
+import { Search, Add, ArrowUpward, ArrowDownward, ArrowBack } from '@mui/icons-material';
 import api from '../../services/api';
 
 const fmt = (n) => `৳ ${Number(n || 0).toLocaleString('en-IN')}`;
@@ -224,6 +225,7 @@ function SupplierLedgerPanel({ supplier, onRefresh }) {
 
 export default function SupplierKhata() {
   const [selected, setSelected] = useState(null);
+  const [showDetail, setShowDetail] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const [addDialog, setAddDialog] = useState(false);
   const [newForm, setNewForm] = useState({ name: '', phone: '', address: '' });
@@ -240,20 +242,32 @@ export default function SupplierKhata() {
     } finally { setSaving(false); }
   };
 
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
   return (
-    <Box sx={{ height: 'calc(100vh - 80px)', display: 'flex', flexDirection: 'column' }}>
+    <Box sx={{ height: { xs: 'auto', sm: 'calc(100vh - 80px)' }, display: 'flex', flexDirection: 'column' }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Typography variant="h5" fontWeight="bold">Supplier Khata</Typography>
-        <Button variant="contained" color="warning" startIcon={<Add />} onClick={() => setAddDialog(true)}>Add Supplier</Button>
+        {isMobile && showDetail ? (
+          <Button startIcon={<ArrowBack />} onClick={() => setShowDetail(false)} size="small">Back</Button>
+        ) : (
+          <Typography variant="h5" fontWeight="bold">Supplier Khata</Typography>
+        )}
+        <Button variant="contained" color="warning" startIcon={<Add />} size="small"
+          onClick={() => setAddDialog(true)}>{isMobile ? 'Add' : 'Add Supplier'}</Button>
       </Box>
 
       <Grid container spacing={2} sx={{ flexGrow: 1, overflow: 'hidden' }}>
-        <Grid item xs={12} sm={4} md={3} sx={{ height: '100%' }}>
-          <SupplierList onSelect={setSelected} selected={selected} refreshKey={refreshKey} />
-        </Grid>
-        <Grid item xs={12} sm={8} md={9} sx={{ height: '100%' }}>
-          <SupplierLedgerPanel supplier={selected} onRefresh={() => setRefreshKey((k) => k + 1)} />
-        </Grid>
+        {(!isMobile || !showDetail) && (
+          <Grid item xs={12} sm={4} md={3} sx={{ height: { xs: 'auto', sm: '100%' } }}>
+            <SupplierList onSelect={(s) => { setSelected(s); if (isMobile) setShowDetail(true); }} selected={selected} refreshKey={refreshKey} />
+          </Grid>
+        )}
+        {(!isMobile || showDetail) && (
+          <Grid item xs={12} sm={8} md={9} sx={{ height: { xs: 'auto', sm: '100%' } }}>
+            <SupplierLedgerPanel supplier={selected} onRefresh={() => setRefreshKey((k) => k + 1)} />
+          </Grid>
+        )}
       </Grid>
 
       <Dialog open={addDialog} onClose={() => setAddDialog(false)} maxWidth="xs" fullWidth>

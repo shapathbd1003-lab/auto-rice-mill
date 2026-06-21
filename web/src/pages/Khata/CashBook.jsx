@@ -4,6 +4,7 @@ import {
   TableCell, TableHead, TableRow, Chip, Dialog, DialogTitle, DialogContent,
   DialogActions, CircularProgress, Alert, Select, MenuItem, FormControl,
   InputLabel, ToggleButton, ToggleButtonGroup, IconButton, Divider,
+  useMediaQuery, useTheme, Card, CardContent, CardActions, Stack,
 } from '@mui/material';
 import { Add, ArrowUpward, ArrowDownward, Edit, Delete } from '@mui/icons-material';
 import api from '../../services/api';
@@ -22,6 +23,8 @@ const CAT_LABELS = {
 };
 
 export default function CashBook() {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [rows, setRows] = useState([]);
   const [summary, setSummary] = useState({ cashIn: 0, cashOut: 0, balance: 0 });
   const [loading, setLoading] = useState(false);
@@ -107,56 +110,85 @@ export default function CashBook() {
       </Grid>
 
       {/* Actions + filters */}
-      <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap', alignItems: 'center' }}>
-        <Button variant="contained" color="success" startIcon={<ArrowDownward />} onClick={() => openAdd('in')}>Cash In</Button>
-        <Button variant="contained" color="error"   startIcon={<ArrowUpward />}   onClick={() => openAdd('out')}>Cash Out</Button>
+      <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+        <Button variant="contained" color="success" startIcon={<ArrowDownward />} size="small" onClick={() => openAdd('in')}>Cash In</Button>
+        <Button variant="contained" color="error" startIcon={<ArrowUpward />} size="small" onClick={() => openAdd('out')}>Cash Out</Button>
         <TextField size="small" type="date" label="Date" value={filterDate}
-          onChange={(e) => setFilterDate(e.target.value)} sx={{ width: 160 }} InputLabelProps={{ shrink: true }} />
+          onChange={(e) => setFilterDate(e.target.value)} sx={{ width: { xs: '100%', sm: 150 } }} InputLabelProps={{ shrink: true }} />
         <ToggleButtonGroup size="small" value={typeFilter} exclusive onChange={(_, v) => setTypeFilter(v || '')}>
-          <ToggleButton value="">All</ToggleButton>
-          <ToggleButton value="in">Cash In</ToggleButton>
-          <ToggleButton value="out">Cash Out</ToggleButton>
+          <ToggleButton value="" sx={{ fontSize: 11, px: 1 }}>All</ToggleButton>
+          <ToggleButton value="in" sx={{ fontSize: 11, px: 1 }}>In</ToggleButton>
+          <ToggleButton value="out" sx={{ fontSize: 11, px: 1 }}>Out</ToggleButton>
         </ToggleButtonGroup>
       </Box>
 
-      {/* Table */}
-      <Paper>
-        <Table size="small">
-          <TableHead>
-            <TableRow sx={{ bgcolor: 'grey.100' }}>
-              <TableCell>Date</TableCell>
-              <TableCell>Category</TableCell>
-              <TableCell>Description</TableCell>
-              <TableCell align="right" sx={{ color: 'success.main' }}>Cash In</TableCell>
-              <TableCell align="right" sx={{ color: 'error.main' }}>Cash Out</TableCell>
-              <TableCell align="center">Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {loading ? (
-              <TableRow><TableCell colSpan={6} align="center"><CircularProgress size={24} /></TableCell></TableRow>
-            ) : rows.length === 0 ? (
-              <TableRow><TableCell colSpan={6} align="center" sx={{ color: 'text.secondary' }}>No transactions for this date</TableCell></TableRow>
-            ) : rows.map((row) => (
-              <TableRow key={row.id} hover>
-                <TableCell sx={{ whiteSpace: 'nowrap' }}>{new Date(row.date).toLocaleDateString('en-IN')}</TableCell>
-                <TableCell><Chip label={CAT_LABELS[row.category] || row.category} size="small" color={row.type === 'in' ? 'success' : 'error'} variant="outlined" /></TableCell>
-                <TableCell>{row.description}</TableCell>
-                <TableCell align="right" sx={{ color: 'success.main', fontWeight: 'bold' }}>
-                  {row.type === 'in' ? fmt(row.amount) : '—'}
-                </TableCell>
-                <TableCell align="right" sx={{ color: 'error.main', fontWeight: 'bold' }}>
-                  {row.type === 'out' ? fmt(row.amount) : '—'}
-                </TableCell>
-                <TableCell align="center">
-                  <IconButton size="small" onClick={() => openEdit(row)}><Edit fontSize="small" /></IconButton>
-                  <IconButton size="small" color="error" onClick={() => setDeleteConfirm(row.id)}><Delete fontSize="small" /></IconButton>
-                </TableCell>
+      {/* Mobile: card list */}
+      {isMobile ? (
+        <Stack spacing={1}>
+          {loading && <Box sx={{ textAlign: 'center', py: 2 }}><CircularProgress size={24} /></Box>}
+          {!loading && rows.length === 0 && <Paper sx={{ p: 2, textAlign: 'center', color: 'text.secondary' }}>No transactions</Paper>}
+          {rows.map((row) => (
+            <Card key={row.id} variant="outlined">
+              <CardContent sx={{ pb: 0, pt: 1.5, px: 2 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <Box>
+                    <Chip label={CAT_LABELS[row.category] || row.category} size="small"
+                      color={row.type === 'in' ? 'success' : 'error'} variant="outlined" />
+                    <Typography variant="body2" sx={{ mt: 0.5 }}>{row.description}</Typography>
+                    <Typography variant="caption" color="text.disabled">{new Date(row.date).toLocaleDateString('en-IN')}</Typography>
+                  </Box>
+                  <Typography variant="h6" fontWeight="bold" color={row.type === 'in' ? 'success.main' : 'error.main'}>
+                    {fmt(row.amount)}
+                  </Typography>
+                </Box>
+              </CardContent>
+              <CardActions sx={{ pt: 0, pb: 1, px: 2, justifyContent: 'flex-end' }}>
+                <IconButton size="small" onClick={() => openEdit(row)}><Edit fontSize="small" /></IconButton>
+                <IconButton size="small" color="error" onClick={() => setDeleteConfirm(row.id)}><Delete fontSize="small" /></IconButton>
+              </CardActions>
+            </Card>
+          ))}
+        </Stack>
+      ) : (
+        /* Desktop: table */
+        <Paper>
+          <Table size="small">
+            <TableHead>
+              <TableRow sx={{ bgcolor: 'grey.100' }}>
+                <TableCell>Date</TableCell>
+                <TableCell>Category</TableCell>
+                <TableCell>Description</TableCell>
+                <TableCell align="right" sx={{ color: 'success.main' }}>Cash In</TableCell>
+                <TableCell align="right" sx={{ color: 'error.main' }}>Cash Out</TableCell>
+                <TableCell align="center">Actions</TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </Paper>
+            </TableHead>
+            <TableBody>
+              {loading ? (
+                <TableRow><TableCell colSpan={6} align="center"><CircularProgress size={24} /></TableCell></TableRow>
+              ) : rows.length === 0 ? (
+                <TableRow><TableCell colSpan={6} align="center" sx={{ color: 'text.secondary' }}>No transactions for this date</TableCell></TableRow>
+              ) : rows.map((row) => (
+                <TableRow key={row.id} hover>
+                  <TableCell sx={{ whiteSpace: 'nowrap' }}>{new Date(row.date).toLocaleDateString('en-IN')}</TableCell>
+                  <TableCell><Chip label={CAT_LABELS[row.category] || row.category} size="small" color={row.type === 'in' ? 'success' : 'error'} variant="outlined" /></TableCell>
+                  <TableCell>{row.description}</TableCell>
+                  <TableCell align="right" sx={{ color: 'success.main', fontWeight: 'bold' }}>
+                    {row.type === 'in' ? fmt(row.amount) : '—'}
+                  </TableCell>
+                  <TableCell align="right" sx={{ color: 'error.main', fontWeight: 'bold' }}>
+                    {row.type === 'out' ? fmt(row.amount) : '—'}
+                  </TableCell>
+                  <TableCell align="center">
+                    <IconButton size="small" onClick={() => openEdit(row)}><Edit fontSize="small" /></IconButton>
+                    <IconButton size="small" color="error" onClick={() => setDeleteConfirm(row.id)}><Delete fontSize="small" /></IconButton>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Paper>
+      )}
 
       {/* Add/Edit Dialog */}
       <Dialog open={dialog} onClose={() => setDialog(false)} maxWidth="xs" fullWidth>

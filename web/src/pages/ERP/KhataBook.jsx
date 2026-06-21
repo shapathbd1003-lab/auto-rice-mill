@@ -14,6 +14,7 @@ import {
 } from '@mui/material';
 import { Search, Add, ArrowUpward, ArrowDownward, WhatsApp, Phone } from '@mui/icons-material';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
+import { useTheme, useMediaQuery } from '@mui/material';
 import api from '../../services/api';
 
 const fmt = (n) => `৳ ${Number(n || 0).toLocaleString('en-IN')}`;
@@ -290,8 +291,11 @@ export default function KhataBook() {
   const { groupId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [group, setGroup] = useState(location.state?.group || null);
   const [selected, setSelected] = useState(null);
+  const [showDetail, setShowDetail] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const [addDialog, setAddDialog] = useState(false);
   const [allLedgers, setAllLedgers] = useState([]);
@@ -341,13 +345,17 @@ export default function KhataBook() {
     <Box sx={{ height:'calc(100vh - 80px)', display:'flex', flexDirection:'column' }}>
       <Box sx={{ display:'flex', justifyContent:'space-between', alignItems:'center', mb:2 }}>
         <Box>
-          <Typography variant="h5" fontWeight="bold">
-            {group?.name || 'Khata Book'}
-          </Typography>
-          {group?.name_bn && <Typography variant="caption" color="text.secondary">{group.name_bn}</Typography>}
+          {isMobile && showDetail ? (
+            <Button startIcon={<Add />} size="small" onClick={() => setShowDetail(false)}>← Back</Button>
+          ) : (
+            <>
+              <Typography variant="h5" fontWeight="bold">{group?.name || 'Khata Book'}</Typography>
+              {group?.name_bn && <Typography variant="caption" color="text.secondary">{group.name_bn}</Typography>}
+            </>
+          )}
         </Box>
         <Box sx={{ display:'flex', gap:1 }}>
-          <Button variant="outlined" size="small" onClick={() => navigate('/erp/ledger-groups')}>All Groups</Button>
+          {!isMobile && <Button variant="outlined" size="small" onClick={() => navigate('/erp/ledger-groups')}>All Groups</Button>}
           <Button variant="contained" startIcon={<Add />} onClick={() => { setError(''); setForm({ name:'', phone:'', email:'', address:'', contact_person:'', opening_balance:0, opening_type:defaultOpeningType, notes:'' }); setAddDialog(true); }}>
             {addLabel}
           </Button>
@@ -355,17 +363,23 @@ export default function KhataBook() {
       </Box>
 
       <Grid container spacing={2} sx={{ flexGrow:1, overflow:'hidden' }}>
-        <Grid item xs={12} sm={4} md={3} sx={{ height:'100%' }}>
-          <LedgerList groupId={groupId} onSelect={setSelected} selected={selected} refreshKey={refreshKey} />
-        </Grid>
-        <Grid item xs={12} sm={8} md={9} sx={{ height:'100%' }}>
-          <LedgerDetail
-            ledger={selected}
-            groupType={groupType}
-            onRefresh={() => setRefreshKey((k) => k+1)}
-            allLedgers={allLedgers}
-          />
-        </Grid>
+        {(!isMobile || !showDetail) && (
+          <Grid item xs={12} sm={4} md={3} sx={{ height:{ xs:'auto', sm:'100%' } }}>
+            <LedgerList groupId={groupId}
+              onSelect={(l) => { setSelected(l); if (isMobile) setShowDetail(true); }}
+              selected={selected} refreshKey={refreshKey} />
+          </Grid>
+        )}
+        {(!isMobile || showDetail) && (
+          <Grid item xs={12} sm={8} md={9} sx={{ height:{ xs:'auto', sm:'100%' } }}>
+            <LedgerDetail
+              ledger={selected}
+              groupType={groupType}
+              onRefresh={() => setRefreshKey((k) => k+1)}
+              allLedgers={allLedgers}
+            />
+          </Grid>
+        )}
       </Grid>
 
       {/* Add Ledger Dialog */}

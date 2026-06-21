@@ -14,14 +14,18 @@ const fmt = (n) => `৳ ${Number(n || 0).toLocaleString('en-IN')}`;
 
 function KhataCard({ title, value, subtitle, icon, color, onClick }) {
   return (
-    <Card onClick={onClick} sx={{ cursor: onClick ? 'pointer' : 'default', '&:hover': onClick ? { boxShadow: 4 } : {} }}>
-      <CardContent sx={{ pb: '12px !important' }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-          <Typography variant="body2" color="text.secondary" fontWeight="medium">{title}</Typography>
-          <Box sx={{ bgcolor: `${color}.100`, borderRadius: '50%', p: 0.7, display: 'flex' }}>{icon}</Box>
+    <Card onClick={onClick} sx={{ cursor: onClick ? 'pointer' : 'default', '&:hover': onClick ? { boxShadow: 4 } : {}, height: '100%' }}>
+      <CardContent sx={{ pb: '8px !important', pt: 1.5, px: { xs: 1.5, sm: 2 } }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
+          <Typography variant="caption" color="text.secondary" fontWeight="medium" noWrap sx={{ fontSize: { xs: 10, sm: 12 } }}>
+            {title}
+          </Typography>
+          <Box sx={{ bgcolor: `${color}.100`, borderRadius: '50%', p: 0.5, display: 'flex', flexShrink: 0, ml: 0.5 }}>{icon}</Box>
         </Box>
-        <Typography variant="h5" fontWeight="bold" color={`${color}.main`}>{value}</Typography>
-        {subtitle && <Typography variant="caption" color="text.secondary">{subtitle}</Typography>}
+        <Typography variant="h6" fontWeight="bold" color={`${color}.main`} sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }} noWrap>
+          {value}
+        </Typography>
+        {subtitle && <Typography variant="caption" color="text.secondary" noWrap sx={{ fontSize: 10 }}>{subtitle}</Typography>}
       </CardContent>
     </Card>
   );
@@ -121,7 +125,7 @@ export default function Dashboard() {
       </Box>
 
       {/* 6 KPI cards */}
-      <Grid container spacing={2} sx={{ mb: 3 }}>
+      <Grid container spacing={{ xs: 1, sm: 2 }} sx={{ mb: 3 }}>
         {cards.map((c) => (
           <Grid item xs={6} sm={4} md={2} key={c.title}>
             <KhataCard {...c} onClick={() => navigate(c.path)} />
@@ -172,13 +176,13 @@ export default function Dashboard() {
                 { label: 'New Sale', path: '/khata/daily-sales', color: 'success' },
                 { label: 'New Purchase', path: '/khata/daily-purchase', color: 'warning' },
                 { label: 'Cash In', path: '/khata/cashbook', color: 'primary' },
-                { label: 'Add Expense', path: '/khata/expenses', color: 'error' },
-                { label: 'Customer Khata', path: '/khata/customers', color: 'inherit' },
-                { label: 'Supplier Khata', path: '/khata/suppliers', color: 'inherit' },
+                { label: 'Expense', path: '/khata/expenses', color: 'error' },
+                { label: 'Customer', path: '/khata/customers', color: 'inherit' },
+                { label: 'Supplier', path: '/khata/suppliers', color: 'inherit' },
               ].map((a) => (
                 <Grid item xs={6} key={a.label}>
                   <Button fullWidth variant="outlined" color={a.color} size="small"
-                    onClick={() => navigate(a.path)} sx={{ justifyContent: 'flex-start', textTransform: 'none' }}>
+                    onClick={() => navigate(a.path)} sx={{ justifyContent: 'flex-start', textTransform: 'none', fontSize: { xs: 11, sm: 13 } }}>
                     {a.label}
                   </Button>
                 </Grid>

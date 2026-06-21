@@ -5,7 +5,9 @@ import {
   Divider, Chip, Dialog, DialogTitle, DialogContent, DialogActions,
   CircularProgress, Alert, Avatar, Tabs, Tab, Table, TableBody,
   TableCell, TableContainer, TableHead, TableRow,
+  useMediaQuery, useTheme,
 } from '@mui/material';
+import { ArrowBack } from '@mui/icons-material';
 import {
   Search, Add, ArrowUpward, ArrowDownward, Person, Phone,
   Edit, Delete, Visibility, WhatsApp,
@@ -166,13 +168,13 @@ function LedgerPanel({ customer, onRefresh }) {
           </Box>
         </Box>
         <Box sx={{ display: 'flex', gap: 1, mt: 2, flexWrap: 'wrap' }}>
-          <Button variant="contained" color="error" startIcon={<ArrowUpward />}
+          <Button variant="contained" color="error" startIcon={<ArrowUpward />} fullWidth={false}
             size="small" onClick={() => { setError(''); setForm({ amount: '', date: today(), description: '' }); setDueDialog(true); }}>
             Add Due
           </Button>
           <Button variant="contained" color="success" startIcon={<ArrowDownward />}
             size="small" onClick={() => { setError(''); setForm({ amount: '', date: today(), description: '' }); setPayDialog(true); }}>
-            Receive Payment
+            Payment
           </Button>
           {customer.phone && (
             <Button variant="outlined" color="success" startIcon={<WhatsApp />} size="small" onClick={openWhatsApp}>
@@ -190,9 +192,9 @@ function LedgerPanel({ customer, onRefresh }) {
         </Tabs>
 
         {tab === 0 && (
-          <Box sx={{ overflowY: 'auto', flexGrow: 1 }}>
+          <Box sx={{ overflowY: 'auto', overflowX: 'auto', flexGrow: 1 }}>
             {loading ? <Box sx={{ p: 2, textAlign: 'center' }}><CircularProgress size={24} /></Box> : (
-              <Table size="small" stickyHeader>
+              <Table size="small" stickyHeader sx={{ minWidth: 420 }}>
                 <TableHead>
                   <TableRow>
                     <TableCell>Date</TableCell>
@@ -300,6 +302,7 @@ function LedgerPanel({ customer, onRefresh }) {
 
 export default function CustomerKhata() {
   const [selected, setSelected] = useState(null);
+  const [showDetail, setShowDetail] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const [addDialog, setAddDialog] = useState(false);
   const [newForm, setNewForm] = useState({ name: '', phone: '', address: '', opening_balance: 0 });
@@ -316,21 +319,36 @@ export default function CustomerKhata() {
     } finally { setSaving(false); }
   };
 
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
   return (
-    <Box sx={{ height: 'calc(100vh - 80px)', display: 'flex', flexDirection: 'column' }}>
+    <Box sx={{ height: { xs: 'auto', sm: 'calc(100vh - 80px)' }, display: 'flex', flexDirection: 'column' }}>
       {/* Top bar */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Typography variant="h5" fontWeight="bold">Customer Khata</Typography>
-        <Button variant="contained" startIcon={<Add />} onClick={() => setAddDialog(true)}>Add Customer</Button>
+        {isMobile && showDetail ? (
+          <Button startIcon={<ArrowBack />} onClick={() => setShowDetail(false)} size="small">Back</Button>
+        ) : (
+          <Typography variant="h5" fontWeight="bold">Customer Khata</Typography>
+        )}
+        <Button variant="contained" startIcon={<Add />} size="small" onClick={() => setAddDialog(true)}>
+          {isMobile ? 'Add' : 'Add Customer'}
+        </Button>
       </Box>
 
       <Grid container spacing={2} sx={{ flexGrow: 1, overflow: 'hidden' }}>
-        <Grid item xs={12} sm={4} md={3} sx={{ height: '100%' }}>
-          <CustomerList key={refreshKey} onSelect={setSelected} selected={selected} />
-        </Grid>
-        <Grid item xs={12} sm={8} md={9} sx={{ height: '100%' }}>
-          <LedgerPanel customer={selected} onRefresh={() => setRefreshKey((k) => k + 1)} />
-        </Grid>
+        {/* List panel — hide on mobile when detail is shown */}
+        {(!isMobile || !showDetail) && (
+          <Grid item xs={12} sm={4} md={3} sx={{ height: { xs: 'auto', sm: '100%' } }}>
+            <CustomerList key={refreshKey} onSelect={(c) => { setSelected(c); if (isMobile) setShowDetail(true); }} selected={selected} />
+          </Grid>
+        )}
+        {/* Detail panel — hide on mobile when list is shown */}
+        {(!isMobile || showDetail) && (
+          <Grid item xs={12} sm={8} md={9} sx={{ height: { xs: 'auto', sm: '100%' } }}>
+            <LedgerPanel customer={selected} onRefresh={() => setRefreshKey((k) => k + 1)} />
+          </Grid>
+        )}
       </Grid>
 
       {/* Add Customer Dialog */}
