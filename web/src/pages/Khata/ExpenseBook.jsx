@@ -3,7 +3,8 @@ import {
   Box, Typography, Button, TextField, Paper, Grid, Table, TableBody,
   TableCell, TableHead, TableRow, Chip, Dialog, DialogTitle, DialogContent,
   DialogActions, CircularProgress, Alert, Select, MenuItem, FormControl,
-  InputLabel, Tabs, Tab, IconButton,
+  InputLabel, Tabs, Tab, IconButton, useMediaQuery, useTheme,
+  Card, CardContent, CardActions, Stack,
 } from '@mui/material';
 import { Add, Edit, Delete } from '@mui/icons-material';
 import api from '../../services/api';
@@ -91,11 +92,16 @@ export default function ExpenseBook() {
     total: rows.filter((r) => r.category === c.value).reduce((s, r) => s + Number(r.amount || 0), 0),
   })).filter((c) => c.total > 0);
 
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
         <Typography variant="h5" fontWeight="bold">Expense Book</Typography>
-        <Button variant="contained" color="error" startIcon={<Add />} onClick={openAdd}>Add Expense</Button>
+        <Button variant="contained" color="error" startIcon={<Add />} onClick={openAdd} size={isMobile ? 'small' : 'medium'}>
+          {isMobile ? 'Add' : 'Add Expense'}
+        </Button>
       </Box>
 
       <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 2 }}>
@@ -106,7 +112,8 @@ export default function ExpenseBook() {
       {tab === 0 && (
         <Box sx={{ mb: 2 }}>
           <TextField size="small" type="date" label="Date" value={filterDate}
-            onChange={(e) => setFilterDate(e.target.value)} sx={{ width: 180 }} InputLabelProps={{ shrink: true }} />
+            onChange={(e) => setFilterDate(e.target.value)}
+            sx={{ width: { xs: '100%', sm: 180 } }} InputLabelProps={{ shrink: true }} />
         </Box>
       )}
       {tab === 1 && (
@@ -133,39 +140,71 @@ export default function ExpenseBook() {
         </Grid>
       )}
 
-      <Paper>
-        <Table size="small">
-          <TableHead>
-            <TableRow sx={{ bgcolor: 'grey.100' }}>
-              <TableCell>Date</TableCell>
-              <TableCell>Category</TableCell>
-              <TableCell>Description</TableCell>
-              <TableCell align="right">Amount</TableCell>
-              <TableCell align="center">Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {loading ? (
-              <TableRow><TableCell colSpan={5} align="center"><CircularProgress size={24} /></TableCell></TableRow>
-            ) : rows.length === 0 ? (
-              <TableRow><TableCell colSpan={5} align="center" sx={{ color: 'text.secondary' }}>No expenses found</TableCell></TableRow>
-            ) : rows.map((row) => (
-              <TableRow key={row.id} hover>
-                <TableCell sx={{ whiteSpace: 'nowrap' }}>{new Date(row.date).toLocaleDateString('en-IN')}</TableCell>
-                <TableCell><Chip label={CATEGORIES.find((c) => c.value === row.category)?.label || row.category} size="small" color={COLORS[row.category] || 'default'} variant="outlined" /></TableCell>
-                <TableCell>{row.description}</TableCell>
-                <TableCell align="right" sx={{ fontWeight: 'bold', color: 'error.main' }}>{fmt(row.amount)}</TableCell>
-                <TableCell align="center">
-                  <IconButton size="small" onClick={() => openEdit(row)}><Edit fontSize="small" /></IconButton>
-                  <IconButton size="small" color="error" onClick={() => handleDelete(row.id)}><Delete fontSize="small" /></IconButton>
-                </TableCell>
+      {/* Mobile: cards */}
+      {isMobile ? (
+        <Stack spacing={1}>
+          {loading && <Box sx={{ textAlign: 'center', py: 3 }}><CircularProgress size={24} /></Box>}
+          {!loading && rows.length === 0 && <Paper sx={{ p: 3, textAlign: 'center', color: 'text.secondary' }}>No expenses found</Paper>}
+          {rows.map((row) => (
+            <Card key={row.id} variant="outlined">
+              <CardContent sx={{ pb: 0, pt: 1.5, px: 2 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <Box sx={{ flex: 1, mr: 1 }}>
+                    <Chip label={CATEGORIES.find((c) => c.value === row.category)?.label || row.category}
+                      size="small" color={COLORS[row.category] || 'default'} variant="outlined" />
+                    <Typography variant="body2" sx={{ mt: 0.5 }}>{row.description}</Typography>
+                    <Typography variant="caption" color="text.disabled">
+                      {new Date(row.date).toLocaleDateString('en-IN')}
+                    </Typography>
+                  </Box>
+                  <Typography variant="h6" fontWeight="bold" color="error.main" sx={{ flexShrink: 0 }}>
+                    {fmt(row.amount)}
+                  </Typography>
+                </Box>
+              </CardContent>
+              <CardActions sx={{ pt: 0, pb: 1, px: 2, justifyContent: 'flex-end' }}>
+                <IconButton size="small" onClick={() => openEdit(row)}><Edit fontSize="small" /></IconButton>
+                <IconButton size="small" color="error" onClick={() => handleDelete(row.id)}><Delete fontSize="small" /></IconButton>
+              </CardActions>
+            </Card>
+          ))}
+        </Stack>
+      ) : (
+        /* Desktop: table */
+        <Paper>
+          <Table size="small">
+            <TableHead>
+              <TableRow sx={{ bgcolor: 'grey.100' }}>
+                <TableCell>Date</TableCell>
+                <TableCell>Category</TableCell>
+                <TableCell>Description</TableCell>
+                <TableCell align="right">Amount</TableCell>
+                <TableCell align="center">Actions</TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </Paper>
+            </TableHead>
+            <TableBody>
+              {loading ? (
+                <TableRow><TableCell colSpan={5} align="center"><CircularProgress size={24} /></TableCell></TableRow>
+              ) : rows.length === 0 ? (
+                <TableRow><TableCell colSpan={5} align="center" sx={{ color: 'text.secondary' }}>No expenses found</TableCell></TableRow>
+              ) : rows.map((row) => (
+                <TableRow key={row.id} hover>
+                  <TableCell sx={{ whiteSpace: 'nowrap' }}>{new Date(row.date).toLocaleDateString('en-IN')}</TableCell>
+                  <TableCell><Chip label={CATEGORIES.find((c) => c.value === row.category)?.label || row.category} size="small" color={COLORS[row.category] || 'default'} variant="outlined" /></TableCell>
+                  <TableCell>{row.description}</TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 'bold', color: 'error.main' }}>{fmt(row.amount)}</TableCell>
+                  <TableCell align="center">
+                    <IconButton size="small" onClick={() => openEdit(row)}><Edit fontSize="small" /></IconButton>
+                    <IconButton size="small" color="error" onClick={() => handleDelete(row.id)}><Delete fontSize="small" /></IconButton>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Paper>
+      )}
 
-      <Dialog open={dialog} onClose={() => setDialog(false)} maxWidth="xs" fullWidth>
+      <Dialog open={dialog} onClose={() => setDialog(false)} maxWidth="xs" fullWidth fullScreen={isMobile}>
         <DialogTitle sx={{ bgcolor: 'error.main', color: 'white' }}>{editRow ? 'Edit Expense' : 'Add Expense'}</DialogTitle>
         <DialogContent sx={{ pt: 2 }}>
           {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}

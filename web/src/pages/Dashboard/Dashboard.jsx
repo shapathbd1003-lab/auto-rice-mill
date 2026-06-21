@@ -117,7 +117,7 @@ export default function Dashboard() {
       {/* Greeting */}
       <Box sx={{ mb: 3 }}>
         <Typography variant="h5" fontWeight="bold">
-          Welcome, {user?.name?.split(' ')[0] || 'Admin'} — স্বাগতম
+          Welcome
         </Typography>
         <Typography variant="body2" color="text.secondary">
           {new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
