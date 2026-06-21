@@ -26,14 +26,15 @@ function KpiCard({ title, value, sub, icon, color, path }) {
 export default function Dashboard() {
   const { user } = useSelector((s) => s.auth);
   const navigate = useNavigate();
-  const [data, setData] = useState(null);
+  const [data, setData] = useState({ summary:{}, profit:{} });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     Promise.all([
-      api.get('/erp/khata/summary').catch(() => ({ data:{ data:{} } })),
-      api.get('/v2/reports/profit-analysis').catch(() => ({ data:{ data:{} } })),
-    ]).then(([s, p]) => setData({ summary: s.data.data, profit: p.data.data }))
+      api.get('/erp/khata/summary').catch(() => ({ data:{ data:null } })),
+      api.get('/v2/reports/profit-analysis').catch(() => ({ data:{ data:null } })),
+    ]).then(([s, p]) => setData({ summary: s?.data?.data || {}, profit: p?.data?.data || {} }))
+    .catch(() => setData({ summary:{}, profit:{} }))
     .finally(() => setLoading(false));
   }, []);
 
