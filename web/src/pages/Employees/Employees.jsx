@@ -205,7 +205,7 @@ export default function Employees() {
                       <TableCell>{row.code}</TableCell>
                       <TableCell>
                         <Typography fontWeight="bold" variant="body2">{row.name}</Typography>
-                        {row.name_bn && <Typography variant="caption" display="block" color="text.secondary">{row.name_bn}</Typography>}
+                        {isBn && row.name_bn && <Typography variant="caption" display="block" color="text.secondary">{row.name_bn}</Typography>}
                       </TableCell>
                       <TableCell>{row.phone}</TableCell>
                       <TableCell>{row.designation}</TableCell>

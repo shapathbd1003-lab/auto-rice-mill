@@ -7,6 +7,7 @@ import {
 } from '@mui/material';
 import { Add, Edit, Delete, AccountTree } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import api from '../../services/api';
 
 const NATURE_OPTIONS = [
@@ -28,6 +29,8 @@ const GROUP_TYPE_OPTIONS = [
 
 export default function LedgerGroups() {
   const navigate = useNavigate();
+  const { i18n } = useTranslation();
+  const isBn = i18n.language === 'bn';
   const [groups, setGroups] = useState([]);
   const [loading, setLoading] = useState(false);
   const [dialog, setDialog] = useState(false);
@@ -126,7 +129,7 @@ export default function LedgerGroups() {
                             onClick={() => navigate(`/erp/khata/${g.id}`, { state:{ group:g } })}>
                             {g.name}
                           </Typography>
-                          {g.name_bn && <Typography variant="caption" color="text.secondary">{g.name_bn}</Typography>}
+                          {isBn && g.name_bn && <Typography variant="caption" color="text.secondary">{g.name_bn}</Typography>}
                           {g.parent_name && <Typography variant="caption" display="block" color="text.disabled">↳ {g.parent_name}</Typography>}
                         </TableCell>
                         <TableCell>
