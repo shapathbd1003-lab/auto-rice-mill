@@ -28,6 +28,8 @@ const authSlice = createSlice({
     refreshUser(state, { payload }) {
       if (payload && state.user) {
         state.user = { ...state.user, ...payload };
+        // Ensure permissions stored for sidebar use
+        if (payload.permissions) state.user.permissions = payload.permissions;
         localStorage.setItem('user', JSON.stringify(state.user));
       }
     },
