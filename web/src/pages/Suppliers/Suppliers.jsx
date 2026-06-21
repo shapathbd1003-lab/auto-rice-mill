@@ -10,7 +10,8 @@ import { Add, Search, Edit } from '@mui/icons-material';
 import api from '../../services/api';
 
 export default function Suppliers() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isBn = i18n.language === 'bn';
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [rows, setRows] = useState([]);
@@ -83,7 +84,7 @@ export default function Suppliers() {
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <Box>
                     <Typography fontWeight="bold">{row.name}</Typography>
-                    {row.name_bn && <Typography variant="caption" color="text.secondary">{row.name_bn}</Typography>}
+                    {isBn && row.name_bn && <Typography variant="caption" color="text.secondary">{row.name_bn}</Typography>}
                     {row.phone && <Typography variant="body2" color="text.secondary">{row.phone}</Typography>}
                   </Box>
                   <Box sx={{ textAlign: 'right' }}>
@@ -122,7 +123,7 @@ export default function Suppliers() {
                     <TableCell>{row.code}</TableCell>
                     <TableCell>
                       <Typography fontWeight="bold" variant="body2">{row.name}</Typography>
-                      {row.name_bn && <Typography variant="caption" display="block" color="text.secondary">{row.name_bn}</Typography>}
+                      {isBn && row.name_bn && <Typography variant="caption" display="block" color="text.secondary">{row.name_bn}</Typography>}
                     </TableCell>
                     <TableCell>{row.phone}</TableCell>
                     <TableCell align="right">

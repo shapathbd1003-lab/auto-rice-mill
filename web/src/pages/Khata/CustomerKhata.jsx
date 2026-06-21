@@ -67,7 +67,7 @@ function CustomerList({ onSelect, selected, t }) {
   );
 }
 
-function LedgerPanel({ customer, onRefresh, t }) {
+function LedgerPanel({ customer, onRefresh, t, isBn }) {
   const [ledger, setLedger] = useState([]);
   const [loading, setLoading] = useState(false);
   const [tab, setTab] = useState(0);
@@ -129,7 +129,7 @@ function LedgerPanel({ customer, onRefresh, t }) {
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 1 }}>
           <Box>
             <Typography variant="h6" fontWeight="bold">{customer.name}</Typography>
-            {customer.name_bn && <Typography variant="body2" color="text.secondary">{customer.name_bn}</Typography>}
+            {isBn && customer.name_bn && <Typography variant="body2" color="text.secondary">{customer.name_bn}</Typography>}
             {customer.phone && (
               <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
                 <Phone fontSize="small" sx={{ mr: 0.5, color: 'text.secondary', fontSize: 14 }} />
@@ -258,7 +258,8 @@ function LedgerPanel({ customer, onRefresh, t }) {
 }
 
 export default function CustomerKhata() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isBn = i18n.language === 'bn';
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [selected, setSelected] = useState(null);
@@ -300,7 +301,7 @@ export default function CustomerKhata() {
         )}
         {(!isMobile || showDetail) && (
           <Grid item xs={12} sm={8} md={9} sx={{ height: { xs: 'auto', sm: '100%' } }}>
-            <LedgerPanel customer={selected} onRefresh={() => setRefreshKey((k) => k + 1)} t={t} />
+            <LedgerPanel customer={selected} onRefresh={() => setRefreshKey((k) => k + 1)} t={t} isBn={isBn} />
           </Grid>
         )}
       </Grid>

@@ -18,7 +18,8 @@ const STATUS_COLORS = { present: 'success', absent: 'error', half_day: 'warning'
 const STATUS_ICONS  = { present: <CheckCircle />, absent: <Cancel />, half_day: <WatchLater />, leave: <WatchLater /> };
 
 export default function Employees() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isBn = i18n.language === 'bn';
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
@@ -166,7 +167,7 @@ export default function Employees() {
                   <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                     <Box>
                       <Typography fontWeight="bold">{row.name}</Typography>
-                      {row.name_bn && <Typography variant="caption" color="text.secondary">{row.name_bn}</Typography>}
+                      {isBn && row.name_bn && <Typography variant="caption" color="text.secondary">{row.name_bn}</Typography>}
                       <Typography variant="body2" color="text.secondary">{row.designation}</Typography>
                       <Typography variant="body2" color="text.secondary">{row.phone}</Typography>
                     </Box>
@@ -318,7 +319,7 @@ export default function Employees() {
                         <TableCell>{emp.code}</TableCell>
                         <TableCell>
                           <Typography fontWeight="bold" variant="body2">{emp.name}</Typography>
-                          {emp.name_bn && <Typography variant="caption" color="text.secondary">{emp.name_bn}</Typography>}
+                          {isBn && emp.name_bn && <Typography variant="caption" color="text.secondary">{emp.name_bn}</Typography>}
                         </TableCell>
                         {!isMobile && <TableCell>{emp.designation}</TableCell>}
                         <TableCell>

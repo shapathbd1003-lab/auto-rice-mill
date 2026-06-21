@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Box, Typography, Button, TextField, Paper, Grid, Chip, IconButton,
   Dialog, DialogTitle, DialogContent, DialogActions, CircularProgress,
@@ -16,15 +17,15 @@ const fmt = (n) => `৳ ${Number(n || 0).toLocaleString('en-IN')}`;
 const NATURE_COLORS = { assets: 'primary', liabilities: 'error', income: 'success', expenses: 'warning', capital: 'secondary' };
 const NATURE_LABELS = { assets: 'Assets', liabilities: 'Liabilities', income: 'Income', expenses: 'Expenses', capital: 'Capital' };
 
-function GroupNode({ group, onEditLedger, onAddLedger, depth = 0 }) {
+function GroupNode({ group, onEditLedger, onAddLedger, depth = 0, isBn }) {
   const [open, setOpen] = useState(depth < 2);
   return (
     <Box>
       <ListItem sx={{ pl: depth * 2 + 1, cursor: 'pointer', bgcolor: depth === 0 ? 'grey.100' : 'transparent' }} onClick={() => setOpen(!open)}>
         <ListItemIcon sx={{ minWidth: 32 }}>{open ? <ExpandLess fontSize="small" /> : <ExpandMore fontSize="small" />}</ListItemIcon>
         <ListItemText
-          primary={<Typography variant={depth === 0 ? 'subtitle1' : 'body2'} fontWeight={depth === 0 ? 'bold' : 'medium'}>{group.name}</Typography>}
-          secondary={group.name_bn}
+          primary={<Typography variant={depth === 0 ? 'subtitle1' : 'body2'} fontWeight={depth === 0 ? 'bold' : 'medium'}>{isBn ? (group.name_bn || group.name) : group.name}</Typography>}
+          secondary={null}
         />
         <Chip label={NATURE_LABELS[group.nature]} color={NATURE_COLORS[group.nature]} size="small" sx={{ mr: 1 }} />
         <Button size="small" startIcon={<Add />} onClick={(e) => { e.stopPropagation(); onAddLedger(group); }}>Add Ledger</Button>
@@ -38,8 +39,8 @@ function GroupNode({ group, onEditLedger, onAddLedger, depth = 0 }) {
           <ListItem key={l.id} sx={{ pl: (depth + 1) * 2 + 1 }}>
             <ListItemIcon sx={{ minWidth: 32 }}><Description fontSize="small" color="action" /></ListItemIcon>
             <ListItemText
-              primary={<Typography variant="body2">{l.name}</Typography>}
-              secondary={l.name_bn}
+              primary={<Typography variant="body2">{isBn ? (l.name_bn || l.name) : l.name}</Typography>}
+              secondary={null}
             />
             <Typography variant="body2" fontWeight="bold" sx={{ mr: 2 }}>
               {fmt(l.current_balance)} {l.balance_type}
@@ -54,6 +55,8 @@ function GroupNode({ group, onEditLedger, onAddLedger, depth = 0 }) {
 }
 
 export default function ChartOfAccounts() {
+  const { t, i18n } = useTranslation();
+  const isBn = i18n.language === 'bn';
   const [coa, setCoa] = useState([]);
   const [ledgers, setLedgers] = useState([]);
   const [groups, setGroups] = useState([]);
@@ -133,7 +136,7 @@ export default function ChartOfAccounts() {
           {loading ? <Box sx={{ p: 3, textAlign: 'center' }}><CircularProgress /></Box> : (
             <List dense>
               {coa.map((group) => (
-                <GroupNode key={group.id} group={group} onEditLedger={openEdit} onAddLedger={openAdd} />
+                <GroupNode key={group.id} group={group} onEditLedger={openEdit} onAddLedger={openAdd} isBn={isBn} />
               ))}
             </List>
           )}
@@ -161,7 +164,7 @@ export default function ChartOfAccounts() {
                   {filtered.map((l) => (
                     <tr key={l.id} style={{ borderBottom: '1px solid #eee' }}>
                       <td style={{ padding: '8px 12px', fontSize: 13, color: '#666' }}>{l.code || '—'}</td>
-                      <td style={{ padding: '8px 12px', fontSize: 13, fontWeight: 500 }}>{l.name}<br/><span style={{ fontSize: 11, color: '#888' }}>{l.name_bn}</span></td>
+                      <td style={{ padding: '8px 12px', fontSize: 13, fontWeight: 500 }}>{isBn ? (l.name_bn || l.name) : l.name}</td>
                       <td style={{ padding: '8px 12px', fontSize: 13 }}>{l.group_name}</td>
                       <td style={{ padding: '8px 12px' }}><Chip label={NATURE_LABELS[l.nature]} color={NATURE_COLORS[l.nature]} size="small" /></td>
                       <td style={{ padding: '8px 12px', fontSize: 13 }}>{fmt(l.opening_balance)} {l.opening_type}</td>

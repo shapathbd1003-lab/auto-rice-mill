@@ -15,6 +15,7 @@ import {
 import { Search, Add, ArrowUpward, ArrowDownward, WhatsApp, Phone } from '@mui/icons-material';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { useTheme, useMediaQuery } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import api from '../../services/api';
 
 const fmt = (n) => `৳ ${Number(n || 0).toLocaleString('en-IN')}`;
@@ -150,7 +151,7 @@ function LedgerDetail({ ledger, groupType, onRefresh, allLedgers }) {
         <Box sx={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', flexWrap:'wrap', gap:1 }}>
           <Box>
             <Typography variant="h6" fontWeight="bold">{ledger.name}</Typography>
-            {ledger.name_bn && <Typography variant="body2" color="text.secondary">{ledger.name_bn}</Typography>}
+            {isBn && ledger.name_bn && <Typography variant="body2" color="text.secondary">{ledger.name_bn}</Typography>}
             {ledger.phone && (
               <Box sx={{ display:'flex', alignItems:'center', gap:0.5, mt:0.5 }}>
                 <Phone fontSize="small" sx={{ color:'text.secondary', fontSize:14 }} />
@@ -291,6 +292,8 @@ export default function KhataBook() {
   const { groupId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
+  const { i18n } = useTranslation();
+  const isBn = i18n.language === 'bn';
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [group, setGroup] = useState(location.state?.group || null);
@@ -350,7 +353,7 @@ export default function KhataBook() {
           ) : (
             <>
               <Typography variant="h5" fontWeight="bold">{group?.name || 'Khata Book'}</Typography>
-              {group?.name_bn && <Typography variant="caption" color="text.secondary">{group.name_bn}</Typography>}
+              {isBn && group?.name_bn && <Typography variant="caption" color="text.secondary">{group.name_bn}</Typography>}
             </>
           )}
         </Box>

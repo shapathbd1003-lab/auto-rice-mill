@@ -12,7 +12,8 @@ import api from '../../services/api';
 const CATEGORIES = ['paddy', 'rice', 'bran', 'husk', 'broken_rice', 'packaging'];
 
 export default function Inventory() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isBn = i18n.language === 'bn';
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [items, setItems] = useState([]);
@@ -67,7 +68,7 @@ export default function Inventory() {
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <Box sx={{ flex: 1 }}>
                     <Typography fontWeight="bold" variant="body1">{row.name}</Typography>
-                    {row.name_bn && <Typography variant="caption" color="text.secondary">{row.name_bn}</Typography>}
+                    {isBn && row.name_bn && <Typography variant="caption" color="text.secondary">{row.name_bn}</Typography>}
                     <Box sx={{ display: 'flex', gap: 1, mt: 0.5, flexWrap: 'wrap' }}>
                       <Chip label={row.category} size="small" variant="outlined" />
                       {row.low_stock && <Chip label={t('inventory.lowStock')} size="small" color="error" />}
@@ -114,7 +115,7 @@ export default function Inventory() {
                     <TableCell>{row.code}</TableCell>
                     <TableCell>
                       <Typography variant="body2" fontWeight="bold">{row.name}</Typography>
-                      {row.name_bn && <Typography variant="caption" display="block" color="text.secondary">{row.name_bn}</Typography>}
+                      {isBn && row.name_bn && <Typography variant="caption" display="block" color="text.secondary">{row.name_bn}</Typography>}
                     </TableCell>
                     <TableCell><Chip label={row.category} size="small" variant="outlined" /></TableCell>
                     <TableCell align="right">
