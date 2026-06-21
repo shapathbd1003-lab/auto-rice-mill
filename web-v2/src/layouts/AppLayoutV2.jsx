@@ -73,7 +73,7 @@ const NAV = [
   },
 ];
 
-function NavItem({ item, level=0 }) {
+function NavItem({ item, level=0, onClose }) {
   const navigate  = useNavigate();
   const location  = useLocation();
   const { user }  = useSelector((s) => s.auth);
@@ -99,7 +99,7 @@ function NavItem({ item, level=0 }) {
         </ListItem>
         <Collapse in={open}>
           <List dense disablePadding>
-            {item.children.map((c) => <NavItem key={c.path} item={c} level={level+1}/>)}
+            {item.children.map((c) => <NavItem key={c.path} item={c} level={level+1} onClose={onClose}/>)}
           </List>
         </Collapse>
       </>
@@ -109,7 +109,7 @@ function NavItem({ item, level=0 }) {
   return (
     <ListItem disablePadding>
       <ListItemButton
-        onClick={() => navigate(item.path)}
+        onClick={() => { navigate(item.path); if (onClose) onClose(); }}
         selected={location.pathname === item.path}
         sx={{ pl:level*2+1.5, '&.Mui-selected':{ bgcolor:'rgba(27,94,32,0.14)', borderRight:'3px solid #1B5E20' } }}>
         {item.icon && <ListItemIcon sx={{ minWidth:34, color:'#2E7D32' }}>{item.icon}</ListItemIcon>}
@@ -143,7 +143,7 @@ export default function AppLayoutV2() {
         </Box>
       </Box>
       <List dense sx={{ flexGrow:1, overflowY:'auto', py:0.5 }}>
-        {NAV.map((item) => <NavItem key={item.label} item={item}/>)}
+        {NAV.map((item) => <NavItem key={item.label} item={item} onClose={() => setMobileOpen(false)}/>)}
       </List>
       <Divider/>
       <Box sx={{ p:1.5, bgcolor:'#f5f5f5' }}>

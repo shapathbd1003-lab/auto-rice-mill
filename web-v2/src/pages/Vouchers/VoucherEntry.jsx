@@ -200,6 +200,8 @@ export default function VoucherEntry() {
     api.get('/v2/masters/voucher-types').then((r) => setVoucherTypes(r.data.data||[]));
   }, [load]);
 
+  const [viewDialog, setViewDialog] = useState(null);
+
   const handleApprove = async (id) => {
     try { await api.post(`/v2/vouchers/${id}/approve`); load(); } catch(e) { alert(e.response?.data?.error?.message||'Failed'); }
   };
@@ -252,9 +254,9 @@ export default function VoucherEntry() {
                       <TableCell align="right" sx={{ fontWeight:'bold' }}>{fmt(v.total_amount)}</TableCell>
                       <TableCell><Chip label={v.status} color={v.status==='approved'?'success':v.status==='cancelled'?'error':'default'} size="small"/></TableCell>
                       <TableCell align="center">
-                        {v.status==='draft' && <IconButton size="small" color="success" onClick={() => handleApprove(v.id)}><Check fontSize="small"/></IconButton>}
-                        {v.status==='draft' && <IconButton size="small" color="error"><Close fontSize="small"/></IconButton>}
-                        <IconButton size="small"><Visibility fontSize="small"/></IconButton>
+                        {v.status==='draft' && <IconButton size="small" color="success" onClick={() => handleApprove(v.id)} title="Approve"><Check fontSize="small"/></IconButton>}
+                        {v.status==='draft' && <IconButton size="small" color="error" title="Cancel" onClick={async () => { try { await api.post(`/v2/vouchers/${v.id}/cancel`); load(); } catch(e) { alert(e.response?.data?.error?.message||'Failed'); } }}><Close fontSize="small"/></IconButton>}
+                        <IconButton size="small" title="View" onClick={() => api.get(`/v2/vouchers/${v.id}`).then((r) => setViewDialog(r.data.data))}><Visibility fontSize="small"/></IconButton>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -262,6 +264,39 @@ export default function VoucherEntry() {
             </Table>
           </Paper>
         </>
+      )}
+
+      {/* View Voucher Dialog */}
+      {viewDialog && (
+        <Dialog open={Boolean(viewDialog)} onClose={() => setViewDialog(null)} maxWidth="sm" fullWidth>
+          <DialogTitle>{viewDialog.voucher_type_name} — {viewDialog.voucher_number}</DialogTitle>
+          <DialogContent>
+            <Grid container spacing={1} sx={{ mb:2 }}>
+              <Grid item xs={6}><Typography variant="caption" color="text.secondary">Date</Typography><Typography variant="body2">{new Date(viewDialog.date).toLocaleDateString('en-IN')}</Typography></Grid>
+              <Grid item xs={6}><Typography variant="caption" color="text.secondary">Status</Typography><br/><Chip label={viewDialog.status} color={viewDialog.status==='approved'?'success':'default'} size="small"/></Grid>
+              {viewDialog.narration && <Grid item xs={12}><Typography variant="caption" color="text.secondary">Narration</Typography><Typography variant="body2">{viewDialog.narration}</Typography></Grid>}
+            </Grid>
+            <Divider sx={{ mb:1 }}/>
+            <Table size="small">
+              <TableHead><TableRow><TableCell>Ledger</TableCell><TableCell align="right" sx={{ color:'primary.main' }}>Dr</TableCell><TableCell align="right" sx={{ color:'success.main' }}>Cr</TableCell></TableRow></TableHead>
+              <TableBody>
+                {(viewDialog.items||[]).map((item, i) => (
+                  <TableRow key={i}>
+                    <TableCell>{item.ledger_name}</TableCell>
+                    <TableCell align="right" sx={{ color:'primary.main', fontWeight:'bold' }}>{item.entry_type==='Dr' ? fmt(item.amount) : ''}</TableCell>
+                    <TableCell align="right" sx={{ color:'success.main', fontWeight:'bold' }}>{item.entry_type==='Cr' ? fmt(item.amount) : ''}</TableCell>
+                  </TableRow>
+                ))}
+                <TableRow sx={{ bgcolor:'grey.50' }}>
+                  <TableCell sx={{ fontWeight:'bold' }}>Total</TableCell>
+                  <TableCell align="right" sx={{ fontWeight:'bold' }}>{fmt(viewDialog.total_amount)}</TableCell>
+                  <TableCell align="right" sx={{ fontWeight:'bold' }}>{fmt(viewDialog.total_amount)}</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </DialogContent>
+          <DialogActions><Button onClick={() => setViewDialog(null)}>Close</Button></DialogActions>
+        </Dialog>
       )}
     </Box>
   );
