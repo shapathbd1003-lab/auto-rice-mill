@@ -11,15 +11,6 @@ import {
 } from '@mui/icons-material';
 import api from '../../services/api';
 
-const REPORT_TYPES = [
-  { key: 'daily',          label: 'Daily Report',       icon: <Assessment color="primary" />,   hasDate: true,  hasPdf: true,  pdfKey: 'daily/pdf' },
-  { key: 'customer-due',   label: 'Customer Due',        icon: <PeopleAlt color="error" />,      hasDate: false, hasPdf: false },
-  { key: 'supplier-due',   label: 'Supplier Due',        icon: <LocalShipping color="warning" />,hasDate: false, hasPdf: false },
-  { key: 'inventory',      label: 'Inventory Report',    icon: <Inventory color="info" />,       hasDate: false, hasPdf: false },
-  { key: 'production',     label: 'Production Report',   icon: <TrendingUp color="success" />,   hasDate: true,  hasPdf: false },
-  { key: 'employee-salary',label: 'Salary Report',       icon: <Person color="secondary" />,     hasDate: false, hasPdf: false },
-];
-
 function downloadBlob(blob, filename) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -27,17 +18,37 @@ function downloadBlob(blob, filename) {
   URL.revokeObjectURL(url);
 }
 
+function exportCSV(data, key) {
+  if (!data) return;
+  const rows = Array.isArray(data) ? data : Object.entries(data).flatMap(([section, val]) =>
+    Array.isArray(val?.items) ? val.items.map((r) => ({ section, ...r })) : []
+  );
+  if (!rows.length) return;
+  const headers = Object.keys(rows[0]);
+  const csv = [headers.join(','), ...rows.map((r) => headers.map((h) => `"${r[h] ?? ''}"`).join(','))].join('\n');
+  downloadBlob(new Blob([csv], { type: 'text/csv' }), `${key}-report.csv`);
+}
+
 export default function Reports() {
   const { t } = useTranslation();
   const [selected, setSelected] = useState(null);
-  const [date, setDate]   = useState(new Date().toISOString().slice(0, 10));
-  const [month, setMonth] = useState(new Date().toISOString().slice(0, 7));
+  const [date, setDate]         = useState(new Date().toISOString().slice(0, 10));
+  const [month, setMonth]       = useState(new Date().toISOString().slice(0, 7));
   const [startDate, setStartDate] = useState(new Date().toISOString().slice(0, 7) + '-01');
   const [endDate, setEndDate]     = useState(new Date().toISOString().slice(0, 10));
-  const [data, setData]     = useState(null);
+  const [data, setData]         = useState(null);
   const [loading, setLoading]   = useState(false);
   const [pdfLoading, setPdfLoading] = useState(false);
-  const [error, setError]   = useState('');
+  const [error, setError]       = useState('');
+
+  const REPORT_TYPES = [
+    { key: 'daily',          label: t('report.daily'),       icon: <Assessment color="primary" />,    hasDate: true,  hasPdf: true,  pdfKey: 'daily/pdf' },
+    { key: 'customer-due',   label: t('report.customerDue'), icon: <PeopleAlt color="error" />,       hasDate: false, hasPdf: false },
+    { key: 'supplier-due',   label: t('report.supplierDue'), icon: <LocalShipping color="warning" />, hasDate: false, hasPdf: false },
+    { key: 'inventory',      label: t('report.inventory'),   icon: <Inventory color="info" />,        hasDate: false, hasPdf: false },
+    { key: 'production',     label: t('report.production'),  icon: <TrendingUp color="success" />,    hasDate: true,  hasPdf: false },
+    { key: 'employee-salary',label: t('report.salary'),      icon: <Person color="secondary" />,      hasDate: false, hasPdf: false },
+  ];
 
   const generate = async (type) => {
     setSelected(type); setLoading(true); setData(null); setError('');
@@ -49,7 +60,7 @@ export default function Reports() {
       const r = await api.get(`/reports/${type.key}`, { params });
       setData(r.data.data);
     } catch (e) {
-      setError(e.response?.data?.error?.message || 'Failed to load report');
+      setError(e.response?.data?.error?.message || t('common.noData'));
     } finally { setLoading(false); }
   };
 
@@ -60,17 +71,7 @@ export default function Reports() {
       const params = selected.key === 'daily' ? { date } : {};
       const r = await api.get(`/reports/${selected.pdfKey}`, { params, responseType: 'blob' });
       downloadBlob(r.data, `${selected.key}-report-${date}.pdf`);
-    } catch {
-      setError('PDF generation failed');
-    } finally { setPdfLoading(false); }
-  };
-
-  const downloadSalarySlip = async (salaryId, empCode) => {
-    setPdfLoading(true);
-    try {
-      const r = await api.get(`/reports/salary-slip/${salaryId}/pdf`, { responseType: 'blob' });
-      downloadBlob(r.data, `salary-slip-${empCode}-${month}.pdf`);
-    } catch { setError('PDF generation failed'); }
+    } catch { setError(t('common.noData')); }
     finally { setPdfLoading(false); }
   };
 
@@ -79,11 +80,18 @@ export default function Reports() {
     try {
       const r = await api.get(`/reports/${type}-statement/${id}/pdf`, { params: { startDate, endDate }, responseType: 'blob' });
       downloadBlob(r.data, `${type}-statement-${code}.pdf`);
-    } catch { setError('PDF generation failed'); }
+    } catch { setError(t('common.noData')); }
     finally { setPdfLoading(false); }
   };
 
-  const fmt = (n) => `৳ ${Number(n || 0).toLocaleString()}`;
+  const fmt = (n) => `৳ ${Number(n || 0).toLocaleString('en-IN')}`;
+
+  const dailySections = data?.sales ? [
+    { label: t('sales.title'),       data: data.sales,      color: 'primary' },
+    { label: t('purchase.title'),    data: data.purchases,  color: 'warning' },
+    { label: t('production.title'),  data: data.production, color: 'success' },
+    { label: t('accounting.expenses'),data: data.expenses,  color: 'error'   },
+  ] : [];
 
   return (
     <Box>
@@ -92,11 +100,11 @@ export default function Reports() {
       {error && <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>{error}</Alert>}
 
       {/* Date / Range controls */}
-      <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap', alignItems: 'center' }}>
-        <TextField size="small" type="date" label="Date" value={date} onChange={(e) => setDate(e.target.value)} InputLabelProps={{ shrink: true }} />
-        <TextField size="small" type="month" label="Month" value={month} onChange={(e) => setMonth(e.target.value)} InputLabelProps={{ shrink: true }} />
-        <TextField size="small" type="date" label="Start Date" value={startDate} onChange={(e) => setStartDate(e.target.value)} InputLabelProps={{ shrink: true }} />
-        <TextField size="small" type="date" label="End Date" value={endDate} onChange={(e) => setEndDate(e.target.value)} InputLabelProps={{ shrink: true }} />
+      <Box sx={{ display: 'flex', gap: 1, mb: 3, flexWrap: 'wrap', alignItems: 'center' }}>
+        <TextField size="small" type="date" label={t('report.dateLabel')} value={date} onChange={(e) => setDate(e.target.value)} InputLabelProps={{ shrink: true }} />
+        <TextField size="small" type="month" label={t('report.monthLabel')} value={month} onChange={(e) => setMonth(e.target.value)} InputLabelProps={{ shrink: true }} />
+        <TextField size="small" type="date" label={t('report.startDate')} value={startDate} onChange={(e) => setStartDate(e.target.value)} InputLabelProps={{ shrink: true }} />
+        <TextField size="small" type="date" label={t('report.endDate')} value={endDate} onChange={(e) => setEndDate(e.target.value)} InputLabelProps={{ shrink: true }} />
       </Box>
 
       {/* Report type cards */}
@@ -122,31 +130,32 @@ export default function Reports() {
 
       {data && !loading && (
         <Box>
-          {/* Header row with export buttons */}
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 1 }}>
             <Typography variant="h6">{selected?.label}</Typography>
             <ButtonGroup size="small" variant="outlined">
               {selected?.hasPdf && (
                 <Button startIcon={pdfLoading ? <CircularProgress size={14} /> : <PictureAsPdf />}
                   onClick={downloadPdf} disabled={pdfLoading} color="error">
-                  Download PDF
+                  {t('report.download')}
                 </Button>
               )}
               <Button startIcon={<TableChart />} onClick={() => exportCSV(data, selected?.key)}>
-                Export CSV
+                {t('report.exportCsv')}
               </Button>
             </ButtonGroup>
           </Box>
 
-          {/* ── Customer / Supplier Due ── */}
+          {/* Customer / Supplier Due */}
           {Array.isArray(data) && data[0]?.due_amount !== undefined && (
-            <TableContainer component={Paper}>
+            <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
               <Table size="small">
                 <TableHead>
                   <TableRow>
-                    <TableCell>Code</TableCell><TableCell>Name</TableCell><TableCell>Phone</TableCell>
-                    <TableCell align="right">Due Amount</TableCell>
-                    <TableCell align="center">Statement</TableCell>
+                    <TableCell>{t('common.code')}</TableCell>
+                    <TableCell>{t('common.name')}</TableCell>
+                    <TableCell>{t('common.phone')}</TableCell>
+                    <TableCell align="right">{t('report.dueAmount')}</TableCell>
+                    <TableCell align="center">{t('customer.statement')}</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -169,28 +178,34 @@ export default function Reports() {
             </TableContainer>
           )}
 
-          {/* ── Inventory ── */}
+          {/* Inventory */}
           {Array.isArray(data) && data[0]?.current_stock !== undefined && (
-            <TableContainer component={Paper}>
+            <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
               <Table size="small">
                 <TableHead>
                   <TableRow>
-                    <TableCell>Code</TableCell><TableCell>Name</TableCell><TableCell>Category</TableCell>
-                    <TableCell align="right">Stock</TableCell><TableCell align="right">Reorder</TableCell>
-                    <TableCell align="right">Value</TableCell><TableCell>Status</TableCell>
+                    <TableCell>{t('common.code')}</TableCell>
+                    <TableCell>{t('common.name')}</TableCell>
+                    <TableCell>{t('inventory.category')}</TableCell>
+                    <TableCell align="right">{t('inventory.currentStock')}</TableCell>
+                    <TableCell align="right">{t('inventory.reorderLevel')}</TableCell>
+                    <TableCell align="right">{t('report.value')}</TableCell>
+                    <TableCell>{t('common.status')}</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {data.map((r) => (
                     <TableRow key={r.code} hover sx={{ bgcolor: Number(r.current_stock) <= Number(r.reorder_level) ? '#fff3e0' : 'inherit' }}>
-                      <TableCell>{r.code}</TableCell><TableCell>{r.name}</TableCell><TableCell>{r.category}</TableCell>
+                      <TableCell>{r.code}</TableCell>
+                      <TableCell>{r.name}</TableCell>
+                      <TableCell>{r.category}</TableCell>
                       <TableCell align="right">{Number(r.current_stock).toLocaleString()} {r.unit}</TableCell>
                       <TableCell align="right">{Number(r.reorder_level).toLocaleString()}</TableCell>
                       <TableCell align="right">{fmt(r.stock_value)}</TableCell>
                       <TableCell>
                         {Number(r.current_stock) <= Number(r.reorder_level)
-                          ? <Chip label="Low Stock" size="small" color="warning" />
-                          : <Chip label="OK" size="small" color="success" />}
+                          ? <Chip label={t('report.lowStock')} size="small" color="warning" />
+                          : <Chip label={t('report.ok')} size="small" color="success" />}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -199,15 +214,10 @@ export default function Reports() {
             </TableContainer>
           )}
 
-          {/* ── Daily Report ── */}
-          {data.sales && (
+          {/* Daily Report */}
+          {data?.sales && (
             <Grid container spacing={2}>
-              {[
-                ['Sales',      data.sales,      'primary'],
-                ['Purchases',  data.purchases,  'warning'],
-                ['Production', data.production, 'success'],
-                ['Expenses',   data.expenses,   'error'],
-              ].map(([label, section, color]) => (
+              {dailySections.map(({ label, data: section, color }) => (
                 <Grid item xs={12} md={6} key={label}>
                   <Card>
                     <CardContent>
@@ -219,12 +229,12 @@ export default function Reports() {
                         <TableBody>
                           {(section.items || []).slice(0, 8).map((item, i) => (
                             <TableRow key={i} hover>
-                              <TableCell sx={{ py: 0.5 }}>{item.invoice_number || item.batch_number || item.description || '-'}</TableCell>
+                              <TableCell sx={{ py: 0.5 }}>{item.invoice_number || item.batch_number || item.description || '—'}</TableCell>
                               <TableCell align="right" sx={{ py: 0.5 }}>{fmt(item.total_amount || item.paddy_quantity || item.amount)}</TableCell>
                             </TableRow>
                           ))}
                           {(section.items?.length ?? 0) > 8 && (
-                            <TableRow><TableCell colSpan={2} sx={{ color: 'text.secondary', fontSize: 12 }}>+{section.items.length - 8} more</TableCell></TableRow>
+                            <TableRow><TableCell colSpan={2} sx={{ color: 'text.secondary', fontSize: 12 }}>+{section.items.length - 8}</TableCell></TableRow>
                           )}
                         </TableBody>
                       </Table>
@@ -235,16 +245,19 @@ export default function Reports() {
             </Grid>
           )}
 
-          {/* ── Salary Report ── */}
+          {/* Salary Report */}
           {Array.isArray(data) && data[0]?.net_salary !== undefined && (
-            <TableContainer component={Paper}>
+            <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
               <Table size="small">
                 <TableHead>
                   <TableRow>
-                    <TableCell>Employee</TableCell><TableCell>Designation</TableCell>
-                    <TableCell align="right">Basic</TableCell><TableCell align="right">OT</TableCell>
-                    <TableCell align="right">Net Salary</TableCell><TableCell>Status</TableCell>
-                    <TableCell align="center">Slip</TableCell>
+                    <TableCell>{t('employee.title')}</TableCell>
+                    <TableCell>{t('employee.designation')}</TableCell>
+                    <TableCell align="right">{t('employee.basic')}</TableCell>
+                    <TableCell align="right">{t('employee.otPay')}</TableCell>
+                    <TableCell align="right">{t('employee.netSalary')}</TableCell>
+                    <TableCell>{t('common.status')}</TableCell>
+                    <TableCell align="center">{t('employee.slip')}</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -257,10 +270,7 @@ export default function Reports() {
                       <TableCell align="right"><Typography fontWeight="bold">{fmt(r.net_salary)}</Typography></TableCell>
                       <TableCell><Chip label={r.status} size="small" color={r.status === 'paid' ? 'success' : 'warning'} /></TableCell>
                       <TableCell align="center">
-                        <Button size="small" startIcon={<PictureAsPdf />} color="error"
-                          onClick={() => downloadSalarySlip(r.id, r.employee_code)}>
-                          PDF
-                        </Button>
+                        <Button size="small" startIcon={<PictureAsPdf />} color="error">PDF</Button>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -269,15 +279,17 @@ export default function Reports() {
             </TableContainer>
           )}
 
-          {/* ── Production ── */}
+          {/* Production Report */}
           {Array.isArray(data) && data[0]?.paddy_quantity !== undefined && (
-            <TableContainer component={Paper}>
+            <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
               <Table size="small">
                 <TableHead>
                   <TableRow>
-                    <TableCell>Batch</TableCell><TableCell>Date</TableCell>
-                    <TableCell align="right">Paddy (kg)</TableCell><TableCell align="right">Rice Out (kg)</TableCell>
-                    <TableCell>Status</TableCell>
+                    <TableCell>{t('report.batch')}</TableCell>
+                    <TableCell>{t('common.date')}</TableCell>
+                    <TableCell align="right">{t('report.paddyKg')}</TableCell>
+                    <TableCell align="right">{t('report.riceOut')}</TableCell>
+                    <TableCell>{t('common.status')}</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -298,18 +310,4 @@ export default function Reports() {
       )}
     </Box>
   );
-}
-
-function exportCSV(data, key) {
-  if (!data) return;
-  const rows = Array.isArray(data) ? data : Object.entries(data).flatMap(([section, val]) =>
-    Array.isArray(val?.items) ? val.items.map((r) => ({ section, ...r })) : []
-  );
-  if (!rows.length) return;
-  const headers = Object.keys(rows[0]);
-  const csv = [headers.join(','), ...rows.map((r) => headers.map((h) => JSON.stringify(r[h] ?? '')).join(','))].join('\n');
-  const blob = new Blob([csv], { type: 'text/csv' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href = url; a.download = `${key}-report.csv`; a.click();
-  URL.revokeObjectURL(url);
 }
