@@ -163,23 +163,48 @@ export default function Dashboard() {
     { title:'Net Profit (FY)',   value:fmt(p.netProfit),            sub:p.margin?`${p.margin}% margin`:'',      color:p.netProfit>=0?'success':'error', icon:<Assessment fontSize="small"/>, path:'/reports/profit-analysis' },
   ];
 
-  const KNOWN_ROLES = ['Administrator','Manager','Chief Accountant','Junior Accountant',
-    'Cashier','Sales Executive','Store Keeper','Production Operator','Auditor'];
-  const hasOnlyCustomRoles = !isAdmin && userRoles.every((r) => !KNOWN_ROLES.includes(r));
+  const dbPerms = user?.permissions || {};
+  const hasDbPerms = Object.keys(dbPerms).length > 0;
 
-  // Pick KPIs based on role
+  // Build KPIs based on DB permissions (for non-admins)
+  // Admin sees all 6. Others see only what their permissions allow.
+  const buildKpisFromPerms = () => {
+    const cards = [];
+    if (dbPerms.sales?.can_view)      cards.push(adminKpis[0]); // Today's Sales
+    if (dbPerms.purchase?.can_view)   cards.push(adminKpis[1]); // Today's Purchases
+    if (dbPerms.sales?.can_view)      cards.push(adminKpis[2]); // Customer Due
+    if (dbPerms.purchase?.can_view)   cards.push(adminKpis[3]); // Supplier Due
+    if (dbPerms.accounting?.can_view) cards.push(adminKpis[4]); // Cash Balance
+    if (dbPerms.reports?.can_view)    cards.push(adminKpis[5]); // Net Profit
+    return cards.length > 0 ? cards : [adminKpis[0]]; // fallback: at least show sales
+  };
+
+  // Pick KPIs
   let kpis = adminKpis;
   if (!isAdmin) {
-    if (['Chief Accountant','Junior Accountant','Auditor'].includes(primaryRole)) kpis = accountantKpis;
-    else if (primaryRole === 'Sales Executive') kpis = salesKpis;
-    else if (primaryRole === 'Store Keeper' || primaryRole === 'Production Operator') kpis = storeKpis;
-    else if (primaryRole === 'Cashier') kpis = cashierKpis;
-    else if (primaryRole === 'Manager') kpis = adminKpis;
-    else if (hasOnlyCustomRoles) kpis = salesKpis; // Custom roles: basic 2-card view
-    else kpis = salesKpis;
+    if (hasDbPerms) {
+      kpis = buildKpisFromPerms();
+    } else {
+      // No DB permissions configured — show nothing meaningful
+      kpis = [];
+    }
   }
 
-  const quickActions = getQuickActions(userRoles);
+  // Quick actions based on DB permissions
+  const buildActionsFromPerms = () => {
+    const actions = [];
+    if (dbPerms.vouchers?.can_create)  { actions.push(['Payment Voucher','/vouchers/payment','error']); actions.push(['Receipt Voucher','/vouchers/receipt','success']); }
+    if (dbPerms.purchase?.can_create)  actions.push(['Purchase Voucher','/vouchers/purchase','warning']);
+    if (dbPerms.sales?.can_create)     actions.push(['Sales Voucher','/vouchers/sales','primary']);
+    if (dbPerms.vouchers?.can_create)  actions.push(['Journal Voucher','/vouchers/journal','secondary']);
+    if (dbPerms.production?.can_create)actions.push(['Production','/vouchers/production','info']);
+    if (dbPerms.reports?.can_view)     actions.push(['Reports','/reports','default']);
+    if (dbPerms.inventory?.can_view)   actions.push(['Inventory','/inventory','default']);
+    return actions;
+  };
+
+  const quickActions = isAdmin ? getQuickActions(userRoles) :
+    hasDbPerms ? buildActionsFromPerms() : [];
 
   return (
     <Box>
@@ -194,14 +219,23 @@ export default function Dashboard() {
         </Box>
       </Box>
 
+      {/* No permissions message */}
+      {!isAdmin && !hasDbPerms && (
+        <Alert severity="info" sx={{ mb:3 }}>
+          Your role has no permissions configured yet. Please ask your Administrator to assign permissions to your role.
+        </Alert>
+      )}
+
       {/* Role-based KPI cards */}
-      <Grid container spacing={{xs:1,sm:2}} sx={{ mb:3 }}>
-        {kpis.map((k) => (
-          <Grid item xs={6} sm={4} md={kpis.length <= 2 ? 6 : kpis.length <= 4 ? 3 : 2} key={k.title}>
-            <KpiCard {...k}/>
-          </Grid>
-        ))}
-      </Grid>
+      {kpis.length > 0 && (
+        <Grid container spacing={{xs:1,sm:2}} sx={{ mb:3 }}>
+          {kpis.map((k) => (
+            <Grid item xs={6} sm={4} md={kpis.length <= 2 ? 6 : kpis.length <= 4 ? 3 : 2} key={k.title}>
+              <KpiCard {...k}/>
+            </Grid>
+          ))}
+        </Grid>
+      )}
 
       <Grid container spacing={2}>
         {/* P&L — only for admin/accountant/manager */}
