@@ -24,6 +24,13 @@ const authSlice = createSlice({
       }
       localStorage.setItem('user', JSON.stringify(payload.user));
     },
+    // Refresh user data from /me endpoint without requiring re-login
+    refreshUser(state, { payload }) {
+      if (payload && state.user) {
+        state.user = { ...state.user, ...payload };
+        localStorage.setItem('user', JSON.stringify(state.user));
+      }
+    },
     logout(state) {
       state.user = null;
       state.token = null;
@@ -37,5 +44,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { setCredentials, logout } = authSlice.actions;
+export const { setCredentials, refreshUser, logout } = authSlice.actions;
 export default authSlice.reducer;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import {
@@ -11,7 +11,7 @@ import {
   AccountTree, ReceiptLong, Assessment, Inventory2, ExpandLess, ExpandMore,
   Factory, Badge as BadgeIcon, DirectionsCar, Security, Grain, Settings,
 } from '@mui/icons-material';
-import { logout } from '../store/authSlice';
+import { logout, refreshUser } from '../store/authSlice';
 import api from '../services/api';
 
 const DRAWER_WIDTH = 260;
@@ -146,6 +146,24 @@ export default function AppLayoutV2() {
   const { user }  = useSelector((s) => s.auth);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorEl, setAnchorEl]     = useState(null);
+
+  // Refresh user roles from DB on every app load
+  // This ensures role changes by admin take effect without re-login
+  useEffect(() => {
+    api.get('/v2/auth/me')
+      .then((r) => {
+        const me = r.data.data;
+        if (me) {
+          dispatch(refreshUser({
+            name:    me.name,
+            email:   me.email,
+            roles:   me.roles || [],
+            isAdmin: me.roles?.includes('Administrator') || false,
+          }));
+        }
+      })
+      .catch(() => {}); // silently fail — use cached data
+  }, [dispatch]);
 
   const handleLogout = async () => {
     try { await api.post('/v2/auth/logout', { refreshToken: localStorage.getItem('refreshToken') }); } catch {}
