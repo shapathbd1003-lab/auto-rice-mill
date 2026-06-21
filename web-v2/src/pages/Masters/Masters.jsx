@@ -98,11 +98,11 @@ export default function Masters() {
         </Button>
       </Box>
 
-      <Paper>
-        <Table size="small">
+      <Paper sx={{ overflowX:'auto' }}>
+        <Table size="small" sx={{ minWidth: 400 }}>
           <TableHead>
             <TableRow sx={{ bgcolor:'grey.100' }}>
-              {cols.map((c) => <TableCell key={c} sx={{ fontWeight:'bold', textTransform:'capitalize' }}>{c.replace(/_/g,' ')}</TableCell>)}
+              {cols.map((c) => <TableCell key={c} sx={{ fontWeight:'bold', textTransform:'capitalize', whiteSpace:'nowrap' }}>{c.replace(/_/g,' ')}</TableCell>)}
               <TableCell align="center">Actions</TableCell>
             </TableRow>
           </TableHead>

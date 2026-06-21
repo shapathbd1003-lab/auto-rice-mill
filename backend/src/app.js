@@ -26,23 +26,21 @@ const khataRoutes        = require('./modules/khata/khata.routes');
 const cashbookRoutes     = require('./modules/khata/cashbook.routes');
 const erpLedgerRoutes    = require('./modules/erp/ledgers.routes');
 const erpKhataRoutes     = require('./modules/erp/khata.routes');
-// V2 — Tally ERP 9 style
-const authV2Routes       = require('./modules/v2/auth-v2.routes');
-const mastersV2Routes    = require('./modules/v2/masters.routes');
-const vouchersV2Routes   = require('./modules/v2/vouchers-v2.routes');
-const reportsV2Routes    = require('./modules/v2/reports-v2.routes');
 const erpVoucherRoutes   = require('./modules/erp/vouchers.routes');
 const erpFYRoutes        = require('./modules/erp/financial-years.routes');
 const erpBankingRoutes   = require('./modules/erp/banking.routes');
 const erpReportRoutes    = require('./modules/erp/erp-reports.routes');
 const erpCompanyRoutes   = require('./modules/erp/company-settings.routes');
+// V2 — Tally ERP 9
+const authV2Routes       = require('./modules/v2/auth-v2.routes');
+const mastersV2Routes    = require('./modules/v2/masters.routes');
+const vouchersV2Routes   = require('./modules/v2/vouchers-v2.routes');
+const reportsV2Routes    = require('./modules/v2/reports-v2.routes');
 
 const app = express();
 
-// Trust Railway/Render proxy
 app.set('trust proxy', 1);
 
-// Security
 app.use(helmet());
 const allowedOrigins = process.env.ALLOWED_ORIGINS || '*';
 app.use(cors({
@@ -50,19 +48,16 @@ app.use(cors({
   credentials: allowedOrigins !== '*',
 }));
 
-// Rate limiting
 app.use('/api/auth', rateLimit({ windowMs: 15 * 60 * 1000, max: 20 }));
 app.use('/api', rateLimit({ windowMs: 60 * 1000, max: 300 }));
 
-// Parsing & logging
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('combined', { stream: { write: (msg) => logger.http(msg.trim()) } }));
 
-// Health check
 app.get('/health', (_req, res) => res.json({ status: 'ok', time: new Date().toISOString() }));
 
-// API routes
+// V1 API routes (unchanged)
 app.use('/api/auth',          authRoutes);
 app.use('/api/dashboard',     dashboardRoutes);
 app.use('/api/customers',     customerRoutes);
@@ -81,21 +76,19 @@ app.use('/api/khata',            khataRoutes);
 app.use('/api/khata/cashbook',   cashbookRoutes);
 app.use('/api/erp',              erpLedgerRoutes);
 app.use('/api/erp/khata',        erpKhataRoutes);
-// V2 API
-app.use('/api/v2/auth',          authV2Routes);
-app.use('/api/v2/masters',       mastersV2Routes);
-app.use('/api/v2/vouchers',      vouchersV2Routes);
-app.use('/api/v2/reports',       reportsV2Routes);
 app.use('/api/erp/vouchers',     erpVoucherRoutes);
 app.use('/api/erp/financial-years', erpFYRoutes);
 app.use('/api/erp/banking',      erpBankingRoutes);
 app.use('/api/erp/reports',      erpReportRoutes);
 app.use('/api/erp',              erpCompanyRoutes);
 
-// 404
-app.use((_req, res) => res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Route not found' } }));
+// V2 API routes (Tally ERP 9 style)
+app.use('/api/v2/auth',          authV2Routes);
+app.use('/api/v2/masters',       mastersV2Routes);
+app.use('/api/v2/vouchers',      vouchersV2Routes);
+app.use('/api/v2/reports',       reportsV2Routes);
 
-// Global error handler
+app.use((_req, res) => res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Route not found' } }));
 app.use(errorHandler);
 
 module.exports = app;
