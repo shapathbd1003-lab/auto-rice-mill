@@ -84,26 +84,16 @@ function NavItem({ item, level=0, onClose }) {
 
   if (item.adminOnly && !user?.isAdmin) return null;
 
-  // Permission check for leaf items — use DB permissions if available
-  if (item.roles && !user?.isAdmin) {
-    const dbPerms = user?.permissions || {};
-    const userRoles = user?.roles || [];
+  const dbPerms = user?.permissions || {};
+  const hasDbPerms = Object.keys(dbPerms).length > 0;
 
-    // If admin has configured DB permissions for this user's role,
-    // use the module permission to decide visibility
-    if (item.permModule && Object.keys(dbPerms).length > 0) {
-      const mod = dbPerms[item.permModule];
-      if (!mod?.can_view) return null;
-    } else {
-      // Fall back to role-name based check
-      const KNOWN_ROLES = ['Administrator','Manager','Chief Accountant','Junior Accountant',
-        'Cashier','Sales Executive','Store Keeper','Production Operator','Auditor'];
-      const hasOnlyCustomRoles = userRoles.every((r) => !KNOWN_ROLES.includes(r));
-      if (!hasOnlyCustomRoles) {
-        const hasAccess = item.roles.some((r) => userRoles.includes(r));
-        if (!hasAccess) return null;
-      }
-      // Custom roles with no DB permissions see everything
+  // Simple permission rule for non-admins:
+  // If DB permissions exist → show only items where module has can_view=true
+  // If no DB permissions → show nothing (user needs admin to grant permissions)
+  if (!user?.isAdmin) {
+    if (item.permModule) {
+      // Leaf item with a module — check DB permission
+      if (!hasDbPerms || !dbPerms[item.permModule]?.can_view) return null;
     }
   }
 
@@ -115,27 +105,10 @@ function NavItem({ item, level=0, onClose }) {
 
   // Hide parent section if user has no access to any child
   if (item.children && !user?.isAdmin) {
-    const dbPerms = user?.permissions || {};
-    const userRoles = user?.roles || [];
-    const KNOWN_ROLES = ['Administrator','Manager','Chief Accountant','Junior Accountant',
-      'Cashier','Sales Executive','Store Keeper','Production Operator','Auditor'];
-    const hasOnlyCustomRoles = userRoles.every((r) => !KNOWN_ROLES.includes(r));
-
-    if (!hasOnlyCustomRoles && Object.keys(dbPerms).length === 0) {
-      // No DB permissions yet — use role-name filter
-      const hasAnyChild = item.children.some((c) =>
-        !c.roles || c.roles.some((r) => userRoles.includes(r))
-      );
-      if (!hasAnyChild) return null;
-    } else if (!hasOnlyCustomRoles && Object.keys(dbPerms).length > 0) {
-      // Has DB permissions — check if any child module is permitted
-      const hasAnyChild = item.children.some((c) =>
-        !c.permModule || dbPerms[c.permModule]?.can_view ||
-        c.roles?.some((r) => userRoles.includes(r))
-      );
-      if (!hasAnyChild) return null;
-    }
-    // Custom roles (no DB perms set) see everything
+    const hasAnyChild = item.children.some((c) =>
+      !c.permModule || (hasDbPerms && dbPerms[c.permModule]?.can_view)
+    );
+    if (!hasAnyChild) return null;
   }
 
   if (item.children) {
