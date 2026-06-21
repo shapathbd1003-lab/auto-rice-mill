@@ -8,9 +8,7 @@ import theme from './theme/theme';
 import './i18n/index';
 import App from './App';
 
-const Router = typeof window !== 'undefined' && window.electronAPI?.isDesktop
-  ? HashRouter
-  : BrowserRouter;
+const Router = HashRouter;
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

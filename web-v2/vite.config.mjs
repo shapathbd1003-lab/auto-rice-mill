@@ -8,6 +8,7 @@ const __dirname = dirname(__filename);
 
 export default defineConfig({
   root: __dirname,
+  base: '/auto-rice-mill/',
   plugins: [react()],
   server: {
     port: 5173,
