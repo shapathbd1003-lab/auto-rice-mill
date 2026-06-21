@@ -19,7 +19,7 @@ router.get('/', async (req, res) => {
   if (req.query.startDate)  { sql += ` AND p.date>=$${idx}`;        params.push(req.query.startDate);  idx++; }
   if (req.query.endDate)    { sql += ` AND p.date<=$${idx}`;        params.push(req.query.endDate);    idx++; }
   if (req.query.status)     { sql += ` AND p.status=$${idx}`;       params.push(req.query.status);     idx++; }
-  const cntRes = await query(sql.replace(/SELECT.*FROM/, 'SELECT COUNT(*) AS total FROM purchases p'), params);
+  const cntRes = await query(sql.replace(/SELECT .+ FROM /, 'SELECT COUNT(*) AS total FROM '), params);
   const total = parseInt(cntRes.rows[0].total);
   sql += ` ORDER BY p.date DESC,p.id DESC LIMIT $${idx} OFFSET $${idx+1}`;
   params.push(limit, offset);

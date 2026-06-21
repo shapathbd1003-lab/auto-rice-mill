@@ -37,7 +37,7 @@ export default function DailyPurchaseBook() {
 
   const load = useCallback(() => {
     setLoading(true);
-    api.get('/purchases', { params: { from: filterDate, to: filterDate, limit: 100 } })
+    api.get('/purchases', { params: { startDate: filterDate, endDate: filterDate, limit: 100 } })
       .then((r) => {
         const data = r.data.data || [];
         setPurchases(data);
