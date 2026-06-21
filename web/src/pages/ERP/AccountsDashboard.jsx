@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Box, Typography, Paper, Grid, Chip, CircularProgress, Alert,
-  Card, CardContent, CardActionArea, Table, TableBody, TableCell,
-  TableHead, TableRow, Divider, Button,
+  Table, TableBody, TableCell, TableRow, Divider, Button,
 } from '@mui/material';
 import {
   People, LocalShipping, AccountBalanceWallet, TrendingUp, TrendingDown,
@@ -26,6 +26,7 @@ const GROUP_TYPE_ICONS = {
 };
 
 export default function AccountsDashboard() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -34,7 +35,7 @@ export default function AccountsDashboard() {
   useEffect(() => {
     api.get('/erp/khata/summary')
       .then((r) => setData(r.data.data))
-      .catch(() => setError('Failed to load accounts summary'))
+      .catch(() => setError(t('common.noData')))
       .finally(() => setLoading(false));
   }, []);
 
@@ -49,27 +50,41 @@ export default function AccountsDashboard() {
     total:  topGroups.filter((g) => g.nature === n).reduce((s, g) => s + Number(g.total_balance), 0),
   }));
 
+  const NATURE_LABELS = {
+    assets:      t('accounts.nature.assets'),
+    liabilities: t('accounts.nature.liabilities'),
+    income:      t('accounts.nature.income'),
+    expenses:    t('accounts.nature.expenses'),
+    capital:     t('accounts.nature.capital'),
+  };
+
+  const cards = [
+    { label: t('dashboard.todaySales'),    value: fmt(data.todaySales?.total),    sub: `${data.todaySales?.count||0} ${t('dashboard.invoices')}`,   color:'success', icon:<TrendingUp fontSize="small" /> },
+    { label: t('dashboard.todayPurchases'),value: fmt(data.todayPurchases?.total),sub: `${data.todayPurchases?.count||0} ${t('dashboard.entries')}`, color:'warning', icon:<TrendingDown fontSize="small" /> },
+    { label: t('dashboard.totalDue'),      value: fmt(data.customerDue?.total),   sub: `${data.customerDue?.count||0} ${t('dashboard.accounts')}`,   color:'error',   icon:<People fontSize="small" /> },
+    { label: t('dashboard.supplierDue'),   value: fmt(data.supplierDue?.total),   sub: `${data.supplierDue?.count||0} ${t('dashboard.accounts')}`,   color:'warning', icon:<LocalShipping fontSize="small" /> },
+    { label: t('dashboard.cashBalance'),   value: fmt(data.cashBalance),          sub: t('dashboard.allAccounts'),                                    color:'primary', icon:<AccountBalanceWallet fontSize="small" /> },
+    {
+      label: t('dashboard.dueAlert'),
+      value: (data.customerDue?.total||0) > 0 ? t('dashboard.hasDues') : t('common.clear'),
+      sub: t('customer.owesYou'),
+      color: (data.customerDue?.total||0) > 0 ? 'error' : 'success',
+      icon: <Warning fontSize="small" />,
+    },
+  ];
+
   return (
     <Box>
       <Box sx={{ display:'flex', justifyContent:'space-between', alignItems:'center', mb:3 }}>
-        <Typography variant="h5" fontWeight="bold">Accounts — Overview</Typography>
-        <Button variant="outlined" size="small" onClick={() => navigate('/erp/ledger-groups')}>Manage Groups</Button>
+        <Typography variant="h5" fontWeight="bold">{t('accounts.overview')}</Typography>
+        <Button variant="outlined" size="small" onClick={() => navigate('/erp/ledger-groups')}>
+          {t('accounts.manageGroups')}
+        </Button>
       </Box>
 
       {/* 6 KPI cards */}
       <Grid container spacing={{ xs:1, sm:2 }} sx={{ mb:3 }}>
-        {[
-          { label:"Today's Sales",     value: fmt(data.todaySales?.total),    sub:`${data.todaySales?.count||0} invoices`,    color:'success', icon:<TrendingUp fontSize="small" /> },
-          { label:"Today's Purchases", value: fmt(data.todayPurchases?.total),sub:`${data.todayPurchases?.count||0} entries`,  color:'warning', icon:<TrendingDown fontSize="small" /> },
-          { label:'Customer Due',      value: fmt(data.customerDue?.total),   sub:`${data.customerDue?.count||0} accounts`,   color:'error',   icon:<People fontSize="small" /> },
-          { label:'Supplier Due',      value: fmt(data.supplierDue?.total),   sub:`${data.supplierDue?.count||0} accounts`,   color:'warning', icon:<LocalShipping fontSize="small" /> },
-          { label:'Cash Balance',      value: fmt(data.cashBalance),          sub:'All accounts',                             color:'primary', icon:<AccountBalanceWallet fontSize="small" /> },
-          { label:'Due Alert',
-            value: (data.customerDue?.total||0) > 0 ? 'Has Dues' : 'Clear',
-            sub: 'Customer outstanding',
-            color: (data.customerDue?.total||0) > 0 ? 'error' : 'success',
-            icon: <Warning fontSize="small" /> },
-        ].map((c) => (
+        {cards.map((c) => (
           <Grid item xs={6} sm={4} md={2} key={c.label}>
             <Paper sx={{ p:{ xs:1, sm:1.5 }, borderTop:`3px solid`, borderColor:`${c.color}.main`, height:'100%' }}>
               <Box sx={{ display:'flex', alignItems:'center', mb:0.5, color:`${c.color}.main`, gap:0.5 }}>
@@ -90,19 +105,16 @@ export default function AccountsDashboard() {
         {byNature.filter((n) => n.groups.length > 0).map(({ nature, groups, total }) => (
           <Grid item xs={12} md={6} key={nature}>
             <Paper>
-              <Box sx={{ p:1.5, display:'flex', justifyContent:'space-between', alignItems:'center',
-                borderLeft:`4px solid ${NATURE_COLORS[nature]}`, pl:2 }}>
-                <Typography variant="subtitle1" fontWeight="bold" sx={{ textTransform:'capitalize' }}>{nature}</Typography>
+              <Box sx={{ p:1.5, display:'flex', justifyContent:'space-between', alignItems:'center', borderLeft:`4px solid ${NATURE_COLORS[nature]}`, pl:2 }}>
+                <Typography variant="subtitle1" fontWeight="bold">{NATURE_LABELS[nature]}</Typography>
                 <Typography variant="subtitle1" fontWeight="bold" sx={{ color: NATURE_COLORS[nature] }}>{fmt(total)}</Typography>
               </Box>
               <Divider />
               <Table size="small">
                 <TableBody>
                   {groups.map((g) => (
-                    <TableRow
-                      key={g.id} hover sx={{ cursor:'pointer' }}
-                      onClick={() => navigate(`/erp/khata/${g.id}`, { state: { group: g } })}
-                    >
+                    <TableRow key={g.id} hover sx={{ cursor:'pointer' }}
+                      onClick={() => navigate(`/erp/khata/${g.id}`, { state: { group: g } })}>
                       <TableCell>
                         <Box sx={{ display:'flex', alignItems:'center', gap:1 }}>
                           {GROUP_TYPE_ICONS[g.group_type] || GROUP_TYPE_ICONS.general}
@@ -113,7 +125,7 @@ export default function AccountsDashboard() {
                         </Box>
                       </TableCell>
                       <TableCell align="right">
-                        <Chip label={`${g.count} ledgers`} size="small" variant="outlined" />
+                        <Chip label={`${g.count} ${t('accounts.ledgers')}`} size="small" variant="outlined" />
                       </TableCell>
                       <TableCell align="right">
                         <Typography variant="body2" fontWeight="bold" sx={{ color: NATURE_COLORS[g.nature] }}>
