@@ -51,7 +51,9 @@ if (isDesktop) {
     (res) => res,
     async (error) => {
       const original = error.config;
-      if (error.response?.status === 401 && !original._retry) {
+      // Don't auto-refresh for auth endpoints — let the error bubble up
+      const isAuthEndpoint = original.url?.includes('/auth/login') || original.url?.includes('/auth/logout');
+      if (error.response?.status === 401 && !original._retry && !isAuthEndpoint) {
         if (isRefreshing) {
           return new Promise((resolve, reject) => failedQueue.push({ resolve, reject }))
             .then((token) => { original.headers.Authorization = `Bearer ${token}`; return api(original); });
@@ -60,7 +62,8 @@ if (isDesktop) {
         isRefreshing = true;
         try {
           const refreshToken = localStorage.getItem('refreshToken');
-          const { data } = await axios.post('/api/auth/refresh', { refreshToken });
+          const baseURL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api` : '/api';
+          const { data } = await axios.post(`${baseURL}/v2/auth/refresh`, { refreshToken });
           const newToken = data.data.token;
           sessionStorage.setItem('token', newToken);
           localStorage.setItem('refreshToken', data.data.refreshToken);
@@ -71,7 +74,7 @@ if (isDesktop) {
           processQueue(err, null);
           localStorage.clear();
           sessionStorage.clear();
-          window.location.href = '/login';
+          window.location.href = window.location.pathname + '#/login';
           return Promise.reject(err);
         } finally {
           isRefreshing = false;
