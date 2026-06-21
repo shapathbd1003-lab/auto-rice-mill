@@ -16,6 +16,9 @@ import api from '../services/api';
 
 const DRAWER_WIDTH = 260;
 
+// Role-based nav config — roles listed can see the item
+// Empty roles array = everyone sees it
+// adminOnly = only Administrator
 const NAV = [
   { label:'Dashboard', icon:<Dashboard/>, path:'/' },
   {
@@ -30,45 +33,45 @@ const NAV = [
   },
   {
     label:'Vouchers', icon:<ReceiptLong/>, children:[
-      { label:'Payment Voucher', path:'/vouchers/payment' },
-      { label:'Receipt Voucher', path:'/vouchers/receipt' },
-      { label:'Contra Voucher',  path:'/vouchers/contra' },
-      { label:'Journal Voucher', path:'/vouchers/journal' },
-      { label:'Purchase Voucher',path:'/vouchers/purchase' },
-      { label:'Sales Voucher',   path:'/vouchers/sales' },
-      { label:'Debit Note',      path:'/vouchers/debit-note' },
-      { label:'Credit Note',     path:'/vouchers/credit-note' },
-      { label:'Production',      path:'/vouchers/production' },
-      { label:'All Vouchers',    path:'/vouchers' },
+      { label:'Payment Voucher',  path:'/vouchers/payment',   roles:['Administrator','Manager','Chief Accountant','Junior Accountant','Cashier'] },
+      { label:'Receipt Voucher',  path:'/vouchers/receipt',   roles:['Administrator','Manager','Chief Accountant','Junior Accountant','Cashier','Sales Executive'] },
+      { label:'Contra Voucher',   path:'/vouchers/contra',    roles:['Administrator','Manager','Chief Accountant','Cashier'] },
+      { label:'Journal Voucher',  path:'/vouchers/journal',   roles:['Administrator','Manager','Chief Accountant','Junior Accountant'] },
+      { label:'Purchase Voucher', path:'/vouchers/purchase',  roles:['Administrator','Manager','Store Keeper'] },
+      { label:'Sales Voucher',    path:'/vouchers/sales',     roles:['Administrator','Manager','Sales Executive'] },
+      { label:'Debit Note',       path:'/vouchers/debit-note',roles:['Administrator','Manager','Chief Accountant'] },
+      { label:'Credit Note',      path:'/vouchers/credit-note',roles:['Administrator','Manager','Chief Accountant'] },
+      { label:'Production',       path:'/vouchers/production',roles:['Administrator','Manager','Store Keeper','Production Operator'] },
+      { label:'All Vouchers',     path:'/vouchers',           roles:['Administrator','Manager','Chief Accountant','Auditor'] },
     ],
   },
   {
     label:'Reports', icon:<Assessment/>, children:[
-      { label:'Trial Balance',   path:'/reports/trial-balance' },
-      { label:'Profit & Loss',   path:'/reports/profit-loss' },
-      { label:'Balance Sheet',   path:'/reports/balance-sheet' },
-      { label:'Day Book',        path:'/reports/day-book' },
-      { label:'Customer Due',    path:'/reports/customer-due' },
-      { label:'Supplier Due',    path:'/reports/supplier-due' },
-      { label:'Paddy Purchase',  path:'/reports/paddy-purchase' },
-      { label:'Production',      path:'/reports/production' },
-      { label:'Stock Report',    path:'/reports/stock' },
-      { label:'Profit Analysis', path:'/reports/profit-analysis' },
+      { label:'Trial Balance',    path:'/reports/trial-balance',   roles:['Administrator','Manager','Chief Accountant','Junior Accountant','Auditor'] },
+      { label:'Profit & Loss',    path:'/reports/profit-loss',     roles:['Administrator','Manager','Chief Accountant','Auditor'] },
+      { label:'Balance Sheet',    path:'/reports/balance-sheet',   roles:['Administrator','Manager','Chief Accountant','Auditor'] },
+      { label:'Day Book',         path:'/reports/day-book',        roles:['Administrator','Manager','Chief Accountant','Junior Accountant','Cashier','Auditor'] },
+      { label:'Customer Due',     path:'/reports/customer-due',    roles:['Administrator','Manager','Chief Accountant','Sales Executive','Auditor'] },
+      { label:'Supplier Due',     path:'/reports/supplier-due',    roles:['Administrator','Manager','Chief Accountant','Store Keeper','Auditor'] },
+      { label:'Paddy Purchase',   path:'/reports/paddy-purchase',  roles:['Administrator','Manager','Store Keeper','Auditor'] },
+      { label:'Production',       path:'/reports/production',      roles:['Administrator','Manager','Store Keeper','Production Operator','Auditor'] },
+      { label:'Stock Report',     path:'/reports/stock',           roles:['Administrator','Manager','Store Keeper','Production Operator','Auditor'] },
+      { label:'Profit Analysis',  path:'/reports/profit-analysis', roles:['Administrator','Manager','Chief Accountant','Auditor'] },
     ],
   },
   {
     label:'Mill Operations', icon:<Factory/>, children:[
-      { label:'Inventory',       path:'/inventory' },
-      { label:'Production',      path:'/production' },
-      { label:'Employees',       path:'/employees' },
-      { label:'Vehicles',        path:'/vehicles' },
+      { label:'Inventory',        path:'/inventory',  roles:['Administrator','Manager','Store Keeper','Production Operator'] },
+      { label:'Production',       path:'/production', roles:['Administrator','Manager','Store Keeper','Production Operator'] },
+      { label:'Employees',        path:'/employees',  roles:['Administrator','Manager'] },
+      { label:'Vehicles',         path:'/vehicles',   roles:['Administrator','Manager'] },
     ],
   },
   {
     label:'Administration', icon:<Security/>, adminOnly:true, children:[
-      { label:'Roles',           path:'/admin/roles' },
-      { label:'Users',           path:'/admin/users' },
-      { label:'Audit Trail',     path:'/admin/audit-trail' },
+      { label:'Roles',            path:'/admin/roles' },
+      { label:'Users',            path:'/admin/users' },
+      { label:'Audit Trail',      path:'/admin/audit-trail' },
     ],
   },
 ];
@@ -81,11 +84,27 @@ function NavItem({ item, level=0, onClose }) {
 
   if (item.adminOnly && !user?.isAdmin) return null;
 
+  // Check role-based access for leaf items
+  if (item.roles && !user?.isAdmin) {
+    const userRoles = user?.roles || [];
+    const hasAccess = item.roles.some((r) => userRoles.includes(r));
+    if (!hasAccess) return null;
+  }
+
   const isActive = item.path
     ? location.pathname === item.path
     : item.children?.some((c) => location.pathname.startsWith(c.path));
 
   useEffect(() => { if (isActive && item.children) setOpen(true); }, [location.pathname]);
+
+  // Hide parent section if user has no access to any child
+  if (item.children && !user?.isAdmin) {
+    const userRoles = user?.roles || [];
+    const hasAnyChild = item.children.some((c) =>
+      !c.roles || c.roles.some((r) => userRoles.includes(r))
+    );
+    if (!hasAnyChild) return null;
+  }
 
   if (item.children) {
     return (
