@@ -31,6 +31,11 @@ const erpFYRoutes        = require('./modules/erp/financial-years.routes');
 const erpBankingRoutes   = require('./modules/erp/banking.routes');
 const erpReportRoutes    = require('./modules/erp/erp-reports.routes');
 const erpCompanyRoutes   = require('./modules/erp/company-settings.routes');
+// V2 — Tally ERP 9
+const authV2Routes       = require('./modules/v2/auth-v2.routes');
+const mastersV2Routes    = require('./modules/v2/masters.routes');
+const vouchersV2Routes   = require('./modules/v2/vouchers-v2.routes');
+const reportsV2Routes    = require('./modules/v2/reports-v2.routes');
 
 const app = express();
 
@@ -81,6 +86,11 @@ app.use('/api/erp/financial-years', erpFYRoutes);
 app.use('/api/erp/banking',      erpBankingRoutes);
 app.use('/api/erp/reports',      erpReportRoutes);
 app.use('/api/erp',              erpCompanyRoutes);
+// V2 routes
+app.use('/api/v2/auth',          authV2Routes);
+app.use('/api/v2/masters',       mastersV2Routes);
+app.use('/api/v2/vouchers',      vouchersV2Routes);
+app.use('/api/v2/reports',       reportsV2Routes);
 
 // 404
 app.use((_req, res) => res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Route not found' } }));
