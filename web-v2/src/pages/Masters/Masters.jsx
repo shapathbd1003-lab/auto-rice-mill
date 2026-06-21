@@ -233,6 +233,32 @@ export default function Masters() {
                 </Grid>
               </>
             )}
+            {type === 'ledgers' && (
+              <>
+                <Grid item xs={12}>
+                  <TextField fullWidth size="small" label="Name (Bengali)" value={form.name_bn||''}
+                    onChange={(e) => setForm({...form, name_bn:e.target.value})} />
+                </Grid>
+                <Grid item xs={6}>
+                  <TextField fullWidth size="small" label="Code" value={form.code||''}
+                    onChange={(e) => setForm({...form, code:e.target.value})} />
+                </Grid>
+                <Grid item xs={6}>
+                  <FormControl fullWidth size="small">
+                    <InputLabel>Active</InputLabel>
+                    <Select value={form.is_active !== false} label="Active"
+                      onChange={(e) => setForm({...form, is_active:e.target.value})}>
+                      <MenuItem value={true}>Active</MenuItem>
+                      <MenuItem value={false}>Inactive</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField fullWidth size="small" label="Notes" multiline rows={2} value={form.notes||''}
+                    onChange={(e) => setForm({...form, notes:e.target.value})} />
+                </Grid>
+              </>
+            )}
             {(type === 'stock-groups' || type === 'cost-centers') && (
               <Grid item xs={12}>
                 <FormControl fullWidth size="small">

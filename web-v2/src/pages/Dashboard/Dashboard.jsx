@@ -102,9 +102,11 @@ export default function Dashboard() {
   const { user } = useSelector((s) => s.auth);
   const navigate  = useNavigate();
   const isAdmin   = user?.isAdmin;
-  // Deduplicate roles (in case of API returning duplicates)
+  // Deduplicate roles
   const userRoles = [...new Set(user?.roles || [])];
-  const primaryRole = userRoles[0] || 'Staff';
+  // Pick highest-privilege role for dashboard layout
+  const ROLE_PRIORITY = ['Administrator','Manager','Chief Accountant','Junior Accountant','Auditor','Cashier','Sales Executive','Store Keeper','Production Operator'];
+  const primaryRole = ROLE_PRIORITY.find((r) => userRoles.includes(r)) || userRoles[0] || 'Staff';
 
   const [data, setData] = useState({ summary:{}, profit:{} });
   const [loading, setLoading] = useState(true);
