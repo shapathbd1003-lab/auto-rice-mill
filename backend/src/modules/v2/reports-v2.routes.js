@@ -82,15 +82,47 @@ router.get('/balance-sheet', async (req, res) => {
      GROUP BY lg.nature, lg.name, l.name, l.opening_balance, l.opening_type ORDER BY lg.nature, lg.name, l.name`,
     [millId, asOf]
   );
+  // Net profit/loss from income & expense ledgers flows into capital (retained earnings)
+  const plRows = await query(
+    `SELECT lg.nature,
+            COALESCE(SUM(CASE WHEN lp.entry_type='Dr' THEN lp.amount ELSE 0 END),0) AS dr,
+            COALESCE(SUM(CASE WHEN lp.entry_type='Cr' THEN lp.amount ELSE 0 END),0) AS cr
+     FROM ledgers l JOIN ledger_groups lg ON lg.id=l.group_id
+     LEFT JOIN ledger_postings lp ON lp.ledger_id=l.id AND lp.mill_id=$1 AND lp.date<=$2
+     WHERE l.mill_id=$1 AND l.deleted_at IS NULL AND lg.nature IN ('income','expenses')
+     GROUP BY lg.nature`,
+    [millId, asOf]
+  );
+  let totalIncome = 0, totalExpenses = 0;
+  for (const r of plRows.rows) {
+    if (r.nature === 'income')   totalIncome   += Number(r.cr) - Number(r.dr);
+    if (r.nature === 'expenses') totalExpenses += Number(r.dr) - Number(r.cr);
+  }
+  const netProfit = totalIncome - totalExpenses; // negative = loss
+
   const calc = (r) => (Number(r.opening_type==='Dr'?r.opening_balance:0) + Number(r.dr)) - (Number(r.opening_type==='Cr'?r.opening_balance:0) + Number(r.cr));
   const assets      = rows.rows.filter((r) => r.nature==='assets');
   const liabilities = rows.rows.filter((r) => r.nature==='liabilities');
   const capital     = rows.rows.filter((r) => r.nature==='capital');
+
+  // Add net P&L as a virtual capital line so the sheet balances
+  const capitalWithPL = [...capital];
+  if (Math.abs(netProfit) > 0.001) {
+    capitalWithPL.push({
+      nature: 'capital', group_name: 'Retained Earnings',
+      ledger_name: netProfit >= 0 ? 'Current Period Profit' : 'Current Period Loss',
+      opening_balance: 0, opening_type: 'Cr',
+      dr: netProfit < 0 ? Math.abs(netProfit) : 0,
+      cr: netProfit >= 0 ? netProfit : 0,
+      isPL: true,
+    });
+  }
+
   success(res, {
-    as_of: asOf, assets, liabilities, capital,
+    as_of: asOf, assets, liabilities, capital: capitalWithPL, netProfit,
     totalAssets:      assets.reduce((s,r) => s+calc(r), 0),
     totalLiabilities: liabilities.reduce((s,r) => s+Math.abs(calc(r)), 0),
-    totalCapital:     capital.reduce((s,r) => s+Math.abs(calc(r)), 0),
+    totalCapital:     capital.reduce((s,r) => s+Math.abs(calc(r)), 0) + netProfit,
   });
 });
 
