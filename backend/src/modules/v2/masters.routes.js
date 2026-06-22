@@ -30,6 +30,20 @@ router.get('/roles', requirePermission('admin', 'can_view'), async (req, res) =>
   success(res, rows.rows);
 });
 
+// GET single role with permissions
+router.get('/roles/:id', requirePermission('admin', 'can_view'), async (req, res) => {
+  const [role, perms] = await Promise.all([
+    query('SELECT * FROM roles WHERE id=$1 AND mill_id=$2', [req.params.id, req.user.millId]),
+    query('SELECT * FROM role_permissions WHERE role_id=$1 ORDER BY module', [req.params.id]),
+  ]);
+  if (!role.rows[0]) return res.status(404).json({ success:false, error:{ code:'NOT_FOUND', message:'Role not found' } });
+  const permissions = {};
+  for (const p of perms.rows) {
+    permissions[p.module] = { can_view:p.can_view, can_create:p.can_create, can_edit:p.can_edit, can_delete:p.can_delete, can_approve:p.can_approve };
+  }
+  success(res, { ...role.rows[0], permissions });
+});
+
 router.post('/roles', requirePermission('admin', 'can_create'), validate(Joi.object({
   name:        Joi.string().max(100).required(),
   description: Joi.string().allow('',null),

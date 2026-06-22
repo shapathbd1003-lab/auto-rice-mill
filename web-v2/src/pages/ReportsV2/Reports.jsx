@@ -194,6 +194,140 @@ export default function ReportsPage() {
         </Paper>
       )}
 
+      {/* Balance Sheet */}
+      {data && selected?.key==='balance-sheet' && (
+        <Grid container spacing={2}>
+          {[
+            { title:'Assets',               rows:data.assets,      color:'primary' },
+            { title:'Liabilities & Capital', rows:[...(data.liabilities||[]),...(data.capital||[])], color:'error' },
+          ].map(({ title, rows, color }) => (
+            <Grid item xs={12} md={6} key={title}>
+              <Paper>
+                <Box sx={{ p:2, bgcolor:`${color}.main`, color:'white', display:'flex', justifyContent:'space-between' }}>
+                  <Typography fontWeight="bold">{title}</Typography>
+                  <Typography fontWeight="bold">{fmt(title==='Assets'?data.totalAssets:(data.totalLiabilities+data.totalCapital))}</Typography>
+                </Box>
+                <Table size="small">
+                  <TableHead><TableRow sx={{ bgcolor:'grey.50' }}><TableCell>Ledger</TableCell><TableCell>Group</TableCell><TableCell align="right">Amount</TableCell></TableRow></TableHead>
+                  <TableBody>
+                    {(rows||[]).length===0
+                      ? <TableRow><TableCell colSpan={3} align="center" sx={{ color:'text.secondary' }}>No entries</TableCell></TableRow>
+                      : (rows||[]).map((r,i) => {
+                        const val = (Number(r.opening_type==='Dr'?r.opening_balance:0)+Number(r.dr))-(Number(r.opening_type==='Cr'?r.opening_balance:0)+Number(r.cr));
+                        return (
+                          <TableRow key={i} hover>
+                            <TableCell>{r.ledger_name}</TableCell>
+                            <TableCell sx={{ color:'text.secondary', fontSize:12 }}>{r.group_name}</TableCell>
+                            <TableCell align="right" sx={{ fontWeight:'bold' }}>{fmt(Math.abs(val))}</TableCell>
+                          </TableRow>
+                        );
+                      })}
+                  </TableBody>
+                </Table>
+              </Paper>
+            </Grid>
+          ))}
+          <Grid item xs={12}>
+            <Paper sx={{ p:2, display:'flex', justifyContent:'space-between', bgcolor:'grey.50' }}>
+              <Typography fontWeight="bold">As of {new Date(data.as_of||asOf).toLocaleDateString('en-IN')}</Typography>
+              <Typography variant="body2" color={Math.abs(data.totalAssets-(data.totalLiabilities+data.totalCapital))<1?'success.main':'error.main'}>
+                {Math.abs(data.totalAssets-(data.totalLiabilities+data.totalCapital))<1?'✓ Balanced':'⚠ Not Balanced'}
+              </Typography>
+            </Paper>
+          </Grid>
+        </Grid>
+      )}
+
+      {/* Day Book */}
+      {data && selected?.key==='day-book' && (
+        <Box>
+          <Typography variant="h6" fontWeight="bold" sx={{ mb:2 }}>Day Book — {new Date(data.date||date).toLocaleDateString('en-IN')}</Typography>
+          {(data.vouchers||[]).length===0 && (data.cashTransactions||[]).length===0 && (data.expenses||[]).length===0
+            ? <Paper sx={{ p:3, textAlign:'center', color:'text.secondary' }}>No transactions for this date</Paper>
+            : <>
+              {(data.vouchers||[]).length > 0 && (
+                <Paper sx={{ mb:2 }}>
+                  <Box sx={{ p:1.5, bgcolor:'grey.100' }}><Typography fontWeight="bold">Vouchers ({data.vouchers.length})</Typography></Box>
+                  <Table size="small">
+                    <TableHead><TableRow><TableCell>Voucher No.</TableCell><TableCell>Type</TableCell><TableCell>Narration</TableCell><TableCell align="right">Amount</TableCell></TableRow></TableHead>
+                    <TableBody>
+                      {data.vouchers.map((v,i) => <TableRow key={i} hover><TableCell sx={{ fontFamily:'monospace' }}>{v.voucher_number}</TableCell><TableCell>{v.type_name}</TableCell><TableCell>{v.narration||'—'}</TableCell><TableCell align="right" sx={{ fontWeight:'bold' }}>{fmt(v.total_amount)}</TableCell></TableRow>)}
+                    </TableBody>
+                  </Table>
+                </Paper>
+              )}
+              {(data.cashTransactions||[]).length > 0 && (
+                <Paper sx={{ mb:2 }}>
+                  <Box sx={{ p:1.5, bgcolor:'grey.100' }}><Typography fontWeight="bold">Cash Transactions ({data.cashTransactions.length})</Typography></Box>
+                  <Table size="small">
+                    <TableHead><TableRow><TableCell>Category</TableCell><TableCell>Description</TableCell><TableCell align="right">Cash In</TableCell><TableCell align="right">Cash Out</TableCell></TableRow></TableHead>
+                    <TableBody>
+                      {data.cashTransactions.map((t,i) => <TableRow key={i} hover><TableCell>{t.category}</TableCell><TableCell>{t.description}</TableCell><TableCell align="right" sx={{ color:'success.main' }}>{t.type==='in'?fmt(t.amount):''}</TableCell><TableCell align="right" sx={{ color:'error.main' }}>{t.type==='out'?fmt(t.amount):''}</TableCell></TableRow>)}
+                    </TableBody>
+                  </Table>
+                </Paper>
+              )}
+              {(data.expenses||[]).length > 0 && (
+                <Paper sx={{ mb:2 }}>
+                  <Box sx={{ p:1.5, bgcolor:'grey.100' }}><Typography fontWeight="bold">Expenses ({data.expenses.length})</Typography></Box>
+                  <Table size="small">
+                    <TableHead><TableRow><TableCell>Category</TableCell><TableCell>Description</TableCell><TableCell align="right">Amount</TableCell></TableRow></TableHead>
+                    <TableBody>
+                      {data.expenses.map((e,i) => <TableRow key={i} hover><TableCell>{e.category}</TableCell><TableCell>{e.description}</TableCell><TableCell align="right" sx={{ color:'error.main', fontWeight:'bold' }}>{fmt(e.amount)}</TableCell></TableRow>)}
+                    </TableBody>
+                  </Table>
+                </Paper>
+              )}
+            </>}
+        </Box>
+      )}
+
+      {/* Paddy Purchase Report */}
+      {data && selected?.key==='paddy-purchase' && (
+        <Paper>
+          <Box sx={{ p:2, display:'flex', justifyContent:'space-between' }}>
+            <Typography variant="h6" fontWeight="bold">Paddy Purchase Report</Typography>
+            <Typography fontWeight="bold" color="warning.main">Total: {fmt(data.total?.amount)} | {Number(data.total?.qty||0).toFixed(1)} kg</Typography>
+          </Box>
+          <Table size="small">
+            <TableHead><TableRow sx={{ bgcolor:'grey.100' }}><TableCell>Invoice</TableCell><TableCell>Date</TableCell><TableCell>Supplier</TableCell><TableCell align="right">Net Weight (kg)</TableCell><TableCell align="right">Total</TableCell><TableCell align="right">Paid</TableCell><TableCell align="right">Due</TableCell></TableRow></TableHead>
+            <TableBody>
+              {(data.rows||[]).length===0
+                ? <TableRow><TableCell colSpan={7} align="center" sx={{ color:'text.secondary' }}>No purchases found</TableCell></TableRow>
+                : (data.rows||[]).map((r) => <TableRow key={r.id} hover><TableCell sx={{ fontFamily:'monospace' }}>{r.invoice_number}</TableCell><TableCell>{r.date}</TableCell><TableCell>{r.supplier_name}</TableCell><TableCell align="right">{Number(r.net_weight||0).toLocaleString()}</TableCell><TableCell align="right" sx={{ fontWeight:'bold' }}>{fmt(r.total_amount)}</TableCell><TableCell align="right" sx={{ color:'success.main' }}>{fmt(r.paid_amount)}</TableCell><TableCell align="right" sx={{ color:r.due_amount>0?'error.main':'text.secondary' }}>{r.due_amount>0?fmt(r.due_amount):'—'}</TableCell></TableRow>)}
+            </TableBody>
+          </Table>
+        </Paper>
+      )}
+
+      {/* Production Report */}
+      {data && selected?.key==='production' && (
+        <Box>
+          {(data.outputSummary||[]).length > 0 && (
+            <Grid container spacing={2} sx={{ mb:2 }}>
+              {data.outputSummary.map((o,i) => (
+                <Grid item xs={6} sm={3} key={i}>
+                  <Paper sx={{ p:2, textAlign:'center', borderTop:'3px solid', borderColor:'success.main' }}>
+                    <Typography variant="caption" color="text.secondary" sx={{ textTransform:'capitalize' }}>{o.product_type}</Typography>
+                    <Typography variant="h6" fontWeight="bold" color="success.main">{Number(o.total).toLocaleString()} kg</Typography>
+                  </Paper>
+                </Grid>
+              ))}
+            </Grid>
+          )}
+          <Paper>
+            <Table size="small">
+              <TableHead><TableRow sx={{ bgcolor:'grey.100' }}><TableCell>Batch No.</TableCell><TableCell>Date</TableCell><TableCell align="right">Paddy (kg)</TableCell><TableCell>Status</TableCell></TableRow></TableHead>
+              <TableBody>
+                {(data.batches||[]).length===0
+                  ? <TableRow><TableCell colSpan={4} align="center" sx={{ color:'text.secondary' }}>No production batches</TableCell></TableRow>
+                  : (data.batches||[]).map((r) => <TableRow key={r.id} hover><TableCell sx={{ fontFamily:'monospace' }}>{r.batch_number}</TableCell><TableCell>{r.date}</TableCell><TableCell align="right">{Number(r.paddy_quantity).toLocaleString()}</TableCell><TableCell><Chip label={r.status} size="small" color={r.status==='completed'?'success':'warning'}/></TableCell></TableRow>)}
+              </TableBody>
+            </Table>
+          </Paper>
+        </Box>
+      )}
+
       {/* Profit Analysis */}
       {data && selected?.key==='profit-analysis' && (
         <Paper sx={{ maxWidth:500 }}>
