@@ -13,18 +13,20 @@ import api from '../../services/api';
 
 const fmt = (n) => `৳ ${Number(n||0).toLocaleString('en-IN')}`;
 
+const VALID_COLORS = ['primary','secondary','error','warning','success','info'];
 function KpiCard({ title, value, sub, icon, color, path }) {
   const navigate = useNavigate();
+  const safeColor = VALID_COLORS.includes(color) ? color : 'primary';
   return (
     <Card
       onClick={() => path && navigate(path)}
-      sx={{ cursor:path?'pointer':'default', height:'100%', '&:hover':path?{boxShadow:4}:{}, borderTop:'3px solid', borderColor:`${color}.main` }}>
+      sx={{ cursor:path?'pointer':'default', height:'100%', '&:hover':path?{boxShadow:4}:{}, borderTop:'3px solid', borderColor:`${safeColor}.main` }}>
       <CardContent sx={{ pb:'8px !important', pt:1.5, px:{xs:1.5,sm:2} }}>
         <Box sx={{ display:'flex', justifyContent:'space-between', mb:0.5 }}>
           <Typography variant="caption" color="text.secondary" noWrap sx={{ fontSize:{xs:10,sm:12} }}>{title}</Typography>
-          <Box sx={{ color:`${color}.main` }}>{icon}</Box>
+          <Box sx={{ color:`${safeColor}.main` }}>{icon}</Box>
         </Box>
-        <Typography variant="h6" fontWeight="bold" color={`${color}.main`} noWrap sx={{ fontSize:{xs:'1rem',sm:'1.2rem'} }}>{value}</Typography>
+        <Typography variant="h6" fontWeight="bold" color={`${safeColor}.main`} noWrap sx={{ fontSize:{xs:'1rem',sm:'1.2rem'} }}>{value}</Typography>
         {sub && <Typography variant="caption" color="text.secondary" noWrap sx={{ fontSize:10 }}>{sub}</Typography>}
       </CardContent>
     </Card>
@@ -198,8 +200,8 @@ export default function Dashboard() {
     if (dbPerms.sales?.can_create)     actions.push(['Sales Voucher','/vouchers/sales','primary']);
     if (dbPerms.vouchers?.can_create)  actions.push(['Journal Voucher','/vouchers/journal','secondary']);
     if (dbPerms.production?.can_create)actions.push(['Production','/vouchers/production','info']);
-    if (dbPerms.reports?.can_view)     actions.push(['Reports','/reports','default']);
-    if (dbPerms.inventory?.can_view)   actions.push(['Inventory','/inventory','default']);
+    if (dbPerms.reports?.can_view)     actions.push(['Reports','/reports','secondary']);
+    if (dbPerms.inventory?.can_view)   actions.push(['Inventory','/inventory','info']);
     return actions;
   };
 
