@@ -3,6 +3,8 @@ const { AppError } = require('../../middleware/errorHandler');
 const { addLedgerEntry } = require('../customers/customers.repository');
 const { deductStock } = require('../inventory/inventory.service');
 const { generateInvoiceNumber } = require('../../utils/invoiceNumber');
+const { postSale } = require('../v2/v1-bridge');
+const { logger } = require('../../utils/logger');
 
 async function createSale(millId, data, userId) {
   const { customerId, saleType = 'retail', items, discount = 0, paidAmount = 0, date, notes, accountId } = data;
@@ -47,6 +49,22 @@ async function createSale(millId, data, userId) {
         [millId, date, accountId, paidAmount, `Payment for Invoice ${invoiceNumber}`, order.id, userId]
       );
       await client.query('UPDATE accounts SET balance = balance + $1 WHERE id = $2', [paidAmount, accountId]);
+    }
+
+    // Bridge to v2 accounting — post double-entry voucher (savepoint-guarded)
+    const cust = await client.query('SELECT name FROM customers WHERE id=$1', [customerId]);
+    try {
+      await client.query('SAVEPOINT v2_bridge');
+      await postSale(client, {
+        millId, userId,
+        customerName: cust.rows[0]?.name || `Customer ${customerId}`,
+        invoiceNumber, date,
+        totalAmount, paidAmount,
+      });
+      await client.query('RELEASE SAVEPOINT v2_bridge');
+    } catch (bridgeErr) {
+      await client.query('ROLLBACK TO SAVEPOINT v2_bridge');
+      logger.error(`[sales] v2 bridge skipped: ${bridgeErr.message}`);
     }
 
     await client.query('COMMIT');

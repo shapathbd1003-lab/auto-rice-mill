@@ -6,6 +6,8 @@ const { success, paginated, created } = require('../../utils/response');
 const { getPagination } = require('../../utils/pagination');
 const { generateInvoiceNumber } = require('../../utils/invoiceNumber');
 const { addStock } = require('../inventory/inventory.service');
+const { postPurchase } = require('../v2/v1-bridge');
+const { logger } = require('../../utils/logger');
 
 router.use(requireAuth);
 
@@ -77,6 +79,23 @@ router.post('/', requireRole('admin','manager','storekeeper'), validate(purchase
     if (d.paddyItemId && d.netWeight) {
       const unitCost = d.netWeight > 0 ? d.totalAmount / d.netWeight : 0;
       await addStock(client, millId, d.paddyItemId, d.netWeight, unitCost, 'purchase', purchase.id, req.user.id);
+    }
+
+    // Bridge to v2 accounting — post double-entry voucher.
+    // Wrapped in a savepoint so a bridge failure can't roll back the purchase.
+    const supp = await client.query('SELECT name FROM suppliers WHERE id=$1', [d.supplierId]);
+    try {
+      await client.query('SAVEPOINT v2_bridge');
+      await postPurchase(client, {
+        millId, userId: req.user.id,
+        supplierName: supp.rows[0]?.name || `Supplier ${d.supplierId}`,
+        invoiceNumber, date: d.date,
+        totalAmount: d.totalAmount, paidAmount: d.paidAmount || 0,
+      });
+      await client.query('RELEASE SAVEPOINT v2_bridge');
+    } catch (bridgeErr) {
+      await client.query('ROLLBACK TO SAVEPOINT v2_bridge');
+      logger.error(`[purchases] v2 bridge skipped: ${bridgeErr.message}`);
     }
 
     await client.query('COMMIT');
