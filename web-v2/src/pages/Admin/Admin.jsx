@@ -30,11 +30,16 @@ function RolesTab() {
   useEffect(() => { load(); }, []);
 
   const openAdd = () => { setEditRole(null); setForm({ name:'', description:'', permissions:{} }); setError(''); setDialog(true); };
-  const openEdit = (r) => {
+  const openEdit = async (r) => {
     setEditRole(r);
-    const perms = {};
-    setForm({ name:r.name, description:r.description||'', permissions:perms });
     setError(''); setDialog(true);
+    setForm({ name:r.name, description:r.description||'', permissions:{} });
+    // Fetch existing permissions from backend
+    try {
+      const res = await api.get(`/v2/masters/roles/${r.id}`);
+      const existingPerms = res.data.data?.permissions || {};
+      setForm({ name:r.name, description:r.description||'', permissions:existingPerms });
+    } catch(e) { /* use empty if fetch fails */ }
   };
 
   const togglePerm = (module, action) => {
